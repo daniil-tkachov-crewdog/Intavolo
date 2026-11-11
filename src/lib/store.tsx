@@ -11,6 +11,7 @@ interface Store {
   skipped: Map<number, number>;
   speechRate: SpeechRate;
   addWord: (wordId: number, status: Status) => void;
+  addWords: (wordIds: number[], status: Status) => void;
   skipWord: (wordId: number) => void;
   answer: (wordId: number, outcome: Outcome) => AnswerResult | null;
   setSpeechRate: (r: SpeechRate) => void;
@@ -36,6 +37,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addWord = useCallback((wordId: number, status: Status) => put(createProgress(wordId, status, Date.now())), [put]);
+
+  const addWords = useCallback((wordIds: number[], status: Status) => {
+    const now = Date.now();
+    const list = wordIds.map((id) => createProgress(id, status, now));
+    db.transaction(() => list.forEach(db.saveProgress));
+    setProgress((m) => {
+      const n = new Map(m);
+      for (const p of list) n.set(p.wordId, p);
+      return n;
+    });
+    setSkipped((m) => {
+      const n = new Map(m);
+      for (const id of wordIds) n.delete(id);
+      return n;
+    });
+  }, []);
 
   const skipWord = useCallback((wordId: number) => {
     const at = Date.now();
@@ -68,8 +85,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ progress, skipped, speechRate, addWord, skipWord, answer, setSpeechRate, speak }),
-    [progress, skipped, speechRate, addWord, skipWord, answer, setSpeechRate, speak]
+    () => ({ progress, skipped, speechRate, addWord, addWords, skipWord, answer, setSpeechRate, speak }),
+    [progress, skipped, speechRate, addWord, addWords, skipWord, answer, setSpeechRate, speak]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

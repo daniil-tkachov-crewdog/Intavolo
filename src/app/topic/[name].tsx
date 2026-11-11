@@ -1,0 +1,52 @@
+import { useMemo } from 'react';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { useStore } from '../../lib/store';
+import { WORDS } from '../../lib/vocab';
+import { WordRow } from '../../components/WordRow';
+import { Button } from '../../components/Button';
+import { C } from '../../lib/theme';
+
+export default function Topic() {
+  const { name } = useLocalSearchParams<{ name: string }>();
+  const { progress, addWord, addWords } = useStore();
+  const words = useMemo(() => WORDS.filter((w) => w.topic === name), [name]);
+  const remaining = words.filter((w) => !progress.has(w.id));
+
+  const learnAll = () =>
+    Alert.alert(`Learn all ${remaining.length} words?`, `They will be added to Practice as New.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Learn all', onPress: () => addWords(remaining.map((w) => w.id), 'new') },
+    ]);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack.Screen options={{ title: name }} />
+      <FlatList
+        data={words}
+        keyExtractor={(w) => String(w.id)}
+        contentContainerStyle={s.list}
+        initialNumToRender={20}
+        ListHeaderComponent={
+          <View style={s.header}>
+            <Text style={s.count}>
+              {words.length - remaining.length} of {words.length} added
+            </Text>
+            {remaining.length > 0 && (
+              <View style={{ flexDirection: 'row' }}>
+                <Button label={`Learn all (${remaining.length})`} onPress={learnAll} />
+              </View>
+            )}
+          </View>
+        }
+        renderItem={({ item }) => <WordRow word={item} status={progress.get(item.id)?.status} onAdd={addWord} />}
+      />
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  list: { padding: 16, gap: 8 },
+  header: { gap: 10, marginBottom: 6 },
+  count: { color: C.muted, fontSize: 14 },
+});

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useStore } from '../lib/store';
-import { WORD_BY_ID } from '../lib/vocab';
+import { WORD_BY_ID, englishOf } from '../lib/vocab';
 import { GOALS, STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
 import { SpeakButton } from '../components/WordCard';
 import { C, STATUS_COLOR } from '../lib/theme';
@@ -41,7 +41,7 @@ export default function Vocabulary() {
           <View style={s.row}>
             <View style={{ flex: 1 }}>
               <Text style={s.it}>{w.it}</Text>
-              <Text style={s.en}>{w.en.join(', ')}</Text>
+              <Text style={s.en}>{englishOf(w).join(', ')}</Text>
             </View>
             <Text style={[s.status, { color: STATUS_COLOR[p.status] }]}>
               {STATUS_LABEL[p.status]}

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { checkAnswer } from '../lib/answer';
 import type { Outcome, Status } from '../lib/engine';
-import { WORDS, type Word } from '../lib/vocab';
+import { WORDS, englishOf, type Word } from '../lib/vocab';
 import { Button } from './Button';
 import { SpeakButton } from './WordCard';
 import { C, shadow } from '../lib/theme';
@@ -14,7 +14,6 @@ interface Props {
 }
 
 const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
-const label = (w: Word) => w.en.slice(0, 2).join(', ');
 
 /** New → multiple choice. Familiar → type English. Fluent & Mastered → type Italian. */
 export function Exercise(props: Props) {
@@ -23,7 +22,8 @@ export function Exercise(props: Props) {
 
 function MultipleChoice({ word, onAnswered }: Props) {
   const options = useMemo(() => {
-    const others = WORDS.filter((w) => w.id !== word.id && !w.en.some((e) => word.en.includes(e)));
+    const mine = englishOf(word);
+    const others = WORDS.filter((w) => w.id !== word.id && !englishOf(w).some((e) => mine.includes(e)));
     const samePos = others.filter((w) => w.pos === word.pos);
     const pool = shuffle(samePos.length >= 3 ? samePos : others).slice(0, 3);
     return shuffle([word, ...pool]);
@@ -43,7 +43,7 @@ function MultipleChoice({ word, onAnswered }: Props) {
           const bg = done && right ? C.primary : done && o.id === picked ? C.accent : hinted && right ? C.primary + '22' : C.bg;
           return (
             <Pressable key={o.id} disabled={done} onPress={() => setPicked(o.id)} style={[s.option, { backgroundColor: bg }]}>
-              <Text style={[s.optionText, done && (right || o.id === picked) && { color: '#fff' }]}>{label(o)}</Text>
+              <Text style={[s.optionText, done && (right || o.id === picked) && { color: '#fff' }]}>{o.en}</Text>
             </Pressable>
           );
         })}
@@ -55,7 +55,7 @@ function MultipleChoice({ word, onAnswered }: Props) {
 
 function TypeAnswer({ word, status, onAnswered }: Props) {
   const toEnglish = status === 'familiar';
-  const accepted = toEnglish ? word.en : [word.it];
+  const accepted = toEnglish ? englishOf(word) : [word.it];
   const [text, setText] = useState('');
   const [hinted, setHinted] = useState(false);
   const [result, setResult] = useState<Outcome | null>(null);
@@ -70,7 +70,7 @@ function TypeAnswer({ word, status, onAnswered }: Props) {
       {toEnglish ? (
         <Prompt big={word.it} sub={word.ipa} speak={word.it} />
       ) : (
-        <Prompt big={word.en.join(', ')} sub="Type it in Italian" />
+        <Prompt big={word.en} sub="Type it in Italian" />
       )}
       <TextInput
         value={text}

@@ -3,12 +3,14 @@
 //   --kaikki   kaikki.org Italian JSONL (.jsonl or .jsonl.gz)
 //   --freq     FrequencyWords it_50k.txt
 //   --tatoeba  Tatoeba ita-eng sentence pairs TSV (optional)
+//   --wordnet  WordNet dict folder (data.noun, index.noun, …) for topics
 //   --out      output path (default: assets/vocab.json)
-//   --limit    number of words (default: 3000)
+//   --limit    max number of words (default: every lemma found in the frequency list)
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 import readline from 'node:readline';
 import path from 'node:path';
+import { loadTopics } from './topics.mjs';
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, arr) => {
@@ -17,15 +19,15 @@ const args = Object.fromEntries(
   }, [])
 );
 if (!args.kaikki || !args.freq) {
-  console.error('Usage: node build.mjs --kaikki <file> --freq <it_50k.txt> [--tatoeba <pairs.tsv>] [--out assets/vocab.json] [--limit 3000]');
+  console.error('Usage: node build.mjs --kaikki <file> --freq <it_50k.txt> [--tatoeba <pairs.tsv>] [--wordnet <dict dir>] [--out assets/vocab.json] [--limit N]');
   process.exit(1);
 }
-const LIMIT = Number(args.limit || 3000);
+const LIMIT = Number(args.limit || Infinity);
 const OUT = args.out || 'assets/vocab.json';
 
 const SKIP_POS = new Set(['name', 'abbrev', 'character', 'symbol', 'suffix', 'prefix', 'infix', 'punct', 'phrase', 'proverb', 'affix', 'romanization', 'contraction']);
 const SKIP_TAGS = new Set(['form-of', 'alt-of', 'obsolete', 'archaic', 'rare', 'abbreviation', 'initialism', 'acronym', 'misspelling', 'dated']);
-const MAX_MEANINGS = 3;
+const MAX_ALT = 2; // side translations besides the main one
 
 function lines(file) {
   let stream = fs.createReadStream(file);
@@ -38,8 +40,9 @@ function cleanGloss(g) {
   // Descriptions ("Used as…", "The name of…") start capitalized; real translations don't.
   if (!text || /^[A-Z]/.test(text.replace(/^I\b/, 'i'))) return [];
   const pieces = text.split(/[;,]/).map((p) => p.trim().replace(/\.$/, '')).filter(Boolean);
+  if (/^(compound|gerund|plural|feminine|masculine|inflection|alternative|apocopic|superlative|diminutive|augmentative|past participle|present participle|synonym|clipping|ellipsis)( form)? of\b/i.test(text)) return [];
   const ok = (p) => p.split(' ').length <= 4 && !/[:"+=]/.test(p) && !/^(etc|used|denotes|indicates|expresses)\b/i.test(p);
-  return pieces.filter(ok);
+  return pieces.filter(ok).map((p) => p.replace(/^(a|an) (?=\w)/, ''));
 }
 
 const tokenize = (t) => t.toLowerCase().split(/[^a-zàáèéìíòóùú]+/).filter(Boolean);
@@ -56,27 +59,30 @@ for await (const line of lines(args.kaikki)) {
   if (!word || word.includes(' ') || /[A-Z]/.test(word[0]) || SKIP_POS.has(e.pos)) continue;
   const key = word.toLowerCase();
 
-  const en = [];
+  const en = []; // all meanings
+  let main = null; // meanings of the first usable sense (main + close synonyms)
   for (const s of e.senses || []) {
     const target = (s.form_of || [])[0]?.word;
     if (target && !formOf.has(key) && target.toLowerCase() !== key) formOf.set(key, target.toLowerCase());
     if (s.form_of || s.alt_of) continue;
     if ((s.tags || []).some((t) => SKIP_TAGS.has(t))) continue;
-    for (const g of s.glosses || []) for (const m of cleanGloss(g)) if (!en.includes(m)) en.push(m);
+    const pieces = (s.glosses || []).slice(0, 1).flatMap(cleanGloss);
+    if (pieces.length && !main) main = [...new Set(pieces)];
+    for (const m of pieces) if (!en.includes(m)) en.push(m);
   }
   const ipa = (e.sounds || []).find((x) => x.ipa)?.ipa || '';
   if (!entries.has(key)) entries.set(key, []);
-  entries.get(key).push({ it: word, en, ipa, pos: e.pos || '' });
+  entries.get(key).push({ it: word, en, main: main || [], ipa, pos: e.pos || '', order: entries.get(key).length });
 }
 
 // Best entry per word: verbs win for infinitives (essere = to be, not "being");
-// otherwise most meanings, with a small edge over nouns (mi = me, not the musical note).
-const score = (x, key) => x.en.length + (x.pos === 'noun' ? 0 : 1) + (x.pos === 'verb' && /(are|ere|ire|rre)$/.test(key) ? 100 : 0);
+// otherwise Wiktionary's first entry (usually the main meaning: cane = dog), unless another has many more meanings.
+const score = (x, key) => Math.min(x.en.length, 6) + (x.order === 0 ? 3 : 0) + (x.pos === 'verb' && /(are|ere|ire|rre)$/.test(key) ? 100 : 0);
 const lemmas = new Map();
 for (const [key, list] of entries) {
   const best = list.filter((x) => x.en.length).sort((a, b) => score(b, key) - score(a, key))[0];
   if (!best) continue;
-  lemmas.set(key, { ...best, ipa: best.ipa || list.find((x) => x.ipa)?.ipa || '', allMeanings: best.en.length, en: best.en.slice(0, MAX_MEANINGS) });
+  lemmas.set(key, { ...best, ipa: best.ipa || list.find((x) => x.ipa)?.ipa || '', allMeanings: best.en.length });
 }
 console.log(`Lemmas found: ${lemmas.size}`);
 
@@ -95,8 +101,9 @@ const words = [];
 const byWord = new Map();
 const add = (key) => {
   if (byWord.has(key) || !lemmas.has(key) || words.length >= LIMIT) return;
-  const { allMeanings, ...l } = lemmas.get(key);
-  const entry = { id: words.length + 1, ...l, examples: [], rank: words.length + 1 };
+  const { it, en, main, ipa, pos } = lemmas.get(key);
+  const sense = main?.length ? main : en;
+  const entry = { id: 0, it, en: sense[0], alt: sense.slice(1, 1 + MAX_ALT), ipa, pos, topic: '', examples: [] };
   words.push(entry);
   byWord.set(key, entry);
 };
@@ -133,6 +140,17 @@ if (args.tatoeba) {
   }
   console.log(`Words with examples: ${words.filter((w) => w.examples.length).length}`);
 }
+
+// 4) Topics (WordNet), then alphabetical order with ids 1..N. The frequency list only picked the words.
+if (args.wordnet) {
+  const topicFor = loadTopics(args.wordnet);
+  for (const w of words) w.topic = topicFor(w);
+  const counts = {};
+  for (const w of words) counts[w.topic] = (counts[w.topic] || 0) + 1;
+  console.log('Topics:', Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${n}`).join(', '));
+}
+words.sort((a, b) => a.it.localeCompare(b.it, 'it'));
+words.forEach((w, i) => (w.id = i + 1));
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(words));

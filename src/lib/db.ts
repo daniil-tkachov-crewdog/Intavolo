@@ -1,7 +1,10 @@
 import { openDatabaseSync } from 'expo-sqlite';
 import type { Progress, Status } from './engine';
 
-const db = openDatabaseSync('intavolo.db');
+// v2: word ids changed when the vocabulary moved to 16k words with topics.
+const db = openDatabaseSync('intavolo-v2.db');
+
+export const transaction = (fn: () => void) => db.withTransactionSync(fn);
 
 db.execSync(`
   CREATE TABLE IF NOT EXISTS progress (

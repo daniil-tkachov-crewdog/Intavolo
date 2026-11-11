@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
-import { Tabs } from 'expo-router';
+import { Link, Tabs } from 'expo-router';
+import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../lib/theme';
 
@@ -20,7 +21,20 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: C.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Explore', tabBarIcon: icon('compass') }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Explore',
+          tabBarIcon: icon('compass'),
+          headerRight: () => (
+            <Link href="/topics" asChild>
+              <Pressable hitSlop={10} style={{ paddingHorizontal: 16 }} accessibilityLabel="Topics and search">
+                <Ionicons name="albums-outline" size={22} color={C.primary} />
+              </Pressable>
+            </Link>
+          ),
+        }}
+      />
       <Tabs.Screen name="practice" options={{ title: 'Practice', tabBarIcon: icon('school') }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: icon('person') }} />
     </Tabs>

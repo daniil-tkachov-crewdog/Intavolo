@@ -10,6 +10,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ contentStyle: { backgroundColor: C.bg }, headerTintColor: C.primary }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="vocabulary" options={{ title: 'Vocabulary', headerBackTitle: 'Profile' }} />
+        <Stack.Screen name="topics" options={{ title: 'Topics', headerBackTitle: 'Explore' }} />
+        <Stack.Screen name="topic/[name]" options={{ title: '', headerBackTitle: 'Topics' }} />
       </Stack>
     </StoreProvider>
   );

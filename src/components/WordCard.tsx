@@ -21,8 +21,12 @@ export function WordCard({ word }: { word: Word }) {
         <SpeakButton text={word.it} size={26} />
       </View>
       {!!word.ipa && <Text style={s.ipa}>{word.ipa}</Text>}
-      <Text style={s.en}>{word.en.join(', ')}</Text>
-      {!!word.pos && <Text style={s.pos}>{word.pos}</Text>}
+      <Text style={s.en}>{word.en}</Text>
+      {word.alt.length > 0 && <Text style={s.alt}>also: {word.alt.join(', ')}</Text>}
+      <View style={s.tags}>
+        {!!word.topic && <Text style={s.tag}>{word.topic}</Text>}
+        {!!word.pos && <Text style={s.pos}>{word.pos}</Text>}
+      </View>
 
       {word.examples.length > 0 && (
         <View style={s.examples}>
@@ -48,7 +52,10 @@ const s = StyleSheet.create({
   speak: { padding: 6 },
   ipa: { fontSize: 17, color: C.muted, marginTop: 4 },
   en: { fontSize: 22, color: C.text, marginTop: 16 },
-  pos: { fontSize: 13, color: C.muted, marginTop: 4, fontStyle: 'italic' },
+  alt: { fontSize: 15, color: C.muted, marginTop: 4 },
+  tags: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
+  tag: { fontSize: 12, color: C.primary, backgroundColor: C.primary + '15', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, overflow: 'hidden' },
+  pos: { fontSize: 13, color: C.muted, fontStyle: 'italic' },
   examples: { marginTop: 20, borderTopWidth: 1, borderTopColor: C.border, paddingTop: 12, gap: 12 },
   example: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   exIt: { fontSize: 16, color: C.text },

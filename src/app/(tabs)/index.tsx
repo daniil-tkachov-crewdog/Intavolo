@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Animated, LayoutAnimation, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useStore } from '../../lib/store';
-import { WORDS } from '../../lib/vocab';
+import { WORDS, SHUFFLE_KEY } from '../../lib/vocab';
 import type { Status } from '../../lib/engine';
 import { WordCard } from '../../components/WordCard';
 import { StatusDropdown } from '../../components/StatusDropdown';
@@ -13,11 +13,11 @@ export default function Explore() {
   const [open, setOpen] = useState(false);
   const fade = useRef(new Animated.Value(1)).current;
 
-  // Unseen words by frequency; skipped ones go to the back of the feed.
+  // Unseen words in random order; skipped ones go to the back of the feed.
   const feed = useMemo(
     () =>
       WORDS.filter((w) => !progress.has(w.id)).sort(
-        (a, b) => (skipped.get(a.id) ?? 0) - (skipped.get(b.id) ?? 0) || a.rank - b.rank
+        (a, b) => (skipped.get(a.id) ?? 0) - (skipped.get(b.id) ?? 0) || SHUFFLE_KEY.get(a.id)! - SHUFFLE_KEY.get(b.id)!
       ),
     [progress, skipped]
   );
