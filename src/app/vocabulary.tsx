@@ -3,6 +3,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useStore } from '../lib/store';
 import { WORD_BY_ID, englishOf } from '../lib/vocab';
 import { GOALS, STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
+import { BelowHeader } from '../components/BelowHeader';
 import { SpeakButton } from '../components/WordCard';
 import { C, STATUS_COLOR } from '../lib/theme';
 
@@ -20,7 +21,7 @@ export default function Vocabulary() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <BelowHeader>
       <View style={s.filters}>
         {(['all', ...STATUSES] as const).map((f) => {
           const on = filter === f;
@@ -51,7 +52,7 @@ export default function Vocabulary() {
           </View>
         )}
       />
-    </View>
+    </BelowHeader>
   );
 }
 

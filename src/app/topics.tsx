@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../lib/store';
 import { TOPICS, WORDS, WORD_BY_ID } from '../lib/vocab';
 import { searchWords } from '../lib/search';
+import { BelowHeader } from '../components/BelowHeader';
 import { WordRow } from '../components/WordRow';
 import { C } from '../lib/theme';
 
@@ -41,7 +42,7 @@ export default function Topics() {
 
   if (q.trim()) {
     return (
-      <View style={{ flex: 1 }}>
+      <BelowHeader>
         {searchBar}
         <FlatList
           data={results}
@@ -51,12 +52,12 @@ export default function Topics() {
           ListEmptyComponent={<Text style={s.empty}>No words found.</Text>}
           renderItem={({ item }) => <WordRow word={item} status={progress.get(item.id)?.status} onAdd={addWord} />}
         />
-      </View>
+      </BelowHeader>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <BelowHeader>
       {searchBar}
       <FlatList
         data={TOPICS}
@@ -72,7 +73,7 @@ export default function Topics() {
           </Pressable>
         )}
       />
-    </View>
+    </BelowHeader>
   );
 }
 

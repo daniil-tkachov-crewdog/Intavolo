@@ -3,6 +3,7 @@ import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useStore } from '../../lib/store';
 import { WORDS } from '../../lib/vocab';
+import { BelowHeader } from '../../components/BelowHeader';
 import { WordRow } from '../../components/WordRow';
 import { Button } from '../../components/Button';
 import { C } from '../../lib/theme';
@@ -20,7 +21,7 @@ export default function Topic() {
     ]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <BelowHeader>
       <Stack.Screen options={{ title: name }} />
       <FlatList
         data={words}
@@ -41,7 +42,7 @@ export default function Topic() {
         }
         renderItem={({ item }) => <WordRow word={item} status={progress.get(item.id)?.status} onAdd={addWord} />}
       />
-    </View>
+    </BelowHeader>
   );
 }
 
