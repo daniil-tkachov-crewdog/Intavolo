@@ -1,0 +1,22 @@
+{
+  "_note": "Hand fixes for very common words that Wiktionary data gets wrong. 'skip': word forms that should count for their base word.",
+  "skip": ["ha", "era", "sei", "sono", "ho", "hai", "abbiamo", "siamo"],
+  "words": {
+    "essere": { "pos": "verb", "en": ["to be"] },
+    "avere": { "pos": "verb", "en": ["to have"] },
+    "a": { "pos": "prep", "en": ["to", "at", "in"] },
+    "mi": { "pos": "pron", "en": ["me", "to me", "myself"] },
+    "ti": { "pos": "pron", "en": ["you", "to you", "yourself"] },
+    "ci": { "pos": "pron", "en": ["us", "there", "ourselves"] },
+    "bene": { "pos": "adv", "en": ["well", "good", "fine"] },
+    "ora": { "pos": "adv", "en": ["now", "hour"] },
+    "no": { "pos": "particle", "en": ["no"] },
+    "non": { "pos": "adv", "en": ["not", "don't"] },
+    "lo": { "pos": "pron", "en": ["him", "it", "the"] },
+    "la": { "pos": "article", "en": ["the", "her", "it"] },
+    "le": { "pos": "article", "en": ["the", "her", "to her"] },
+    "cosa": { "pos": "noun", "en": ["thing", "what"] },
+    "uno": { "pos": "num", "en": ["one", "a", "someone"] },
+    "di": { "pos": "prep", "en": ["of", "from"] }
+  }
+}
