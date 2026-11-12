@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useStore } from '../../lib/store';
-import { WORDS } from '../../lib/vocab';
+import { WORDS, isLevel } from '../../lib/vocab';
 import { BelowHeader } from '../../components/BelowHeader';
 import { WordRow } from '../../components/WordRow';
 import { Button } from '../../components/Button';
@@ -11,7 +11,7 @@ import { C } from '../../lib/theme';
 export default function Topic() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const { progress, addWord, addWords } = useStore();
-  const words = useMemo(() => WORDS.filter((w) => w.topic === name), [name]);
+  const words = useMemo(() => WORDS.filter((w) => (isLevel(name) ? w.level === name : w.topic === name)), [name]);
   const remaining = words.filter((w) => !progress.has(w.id));
 
   const learnAll = () =>
