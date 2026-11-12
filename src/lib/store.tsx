@@ -13,6 +13,7 @@ interface Store {
   addWord: (wordId: number, status: Status) => void;
   addWords: (wordIds: number[], status: Status) => void;
   skipWord: (wordId: number) => void;
+  removeWord: (wordId: number) => void;
   answer: (wordId: number, outcome: Outcome) => AnswerResult | null;
   setSpeechRate: (r: SpeechRate) => void;
   speak: (text: string) => void;
@@ -60,6 +61,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSkipped((m) => new Map(m).set(wordId, at));
   }, []);
 
+  const removeWord = useCallback((wordId: number) => {
+    db.deleteProgress(wordId);
+    setProgress((m) => {
+      if (!m.has(wordId)) return m;
+      const n = new Map(m);
+      n.delete(wordId);
+      return n;
+    });
+  }, []);
+
   const answer = useCallback(
     (wordId: number, outcome: Outcome) => {
       const p = progress.get(wordId);
@@ -85,8 +96,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ progress, skipped, speechRate, addWord, addWords, skipWord, answer, setSpeechRate, speak }),
-    [progress, skipped, speechRate, addWord, addWords, skipWord, answer, setSpeechRate, speak]
+    () => ({ progress, skipped, speechRate, addWord, addWords, skipWord, removeWord, answer, setSpeechRate, speak }),
+    [progress, skipped, speechRate, addWord, addWords, skipWord, removeWord, answer, setSpeechRate, speak]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -5,10 +5,11 @@ import { WORD_BY_ID, englishOf } from '../lib/vocab';
 import { GOALS, STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
 import { BelowHeader } from '../components/BelowHeader';
 import { SpeakButton } from '../components/WordCard';
+import { SwipeToDelete } from '../components/SwipeToDelete';
 import { C, STATUS_COLOR } from '../lib/theme';
 
 export default function Vocabulary() {
-  const { progress } = useStore();
+  const { progress, removeWord } = useStore();
   const [filter, setFilter] = useState<Status | 'all'>('all');
 
   const rows = useMemo(
@@ -39,6 +40,7 @@ export default function Vocabulary() {
         contentContainerStyle={{ padding: 16, gap: 8 }}
         ListEmptyComponent={<Text style={s.empty}>No words here yet.</Text>}
         renderItem={({ item: { p, w } }) => (
+          <SwipeToDelete onDelete={() => removeWord(p.wordId)}>
           <View style={s.row}>
             <View style={{ flex: 1 }}>
               <Text style={s.it}>{w.it}</Text>
@@ -50,6 +52,7 @@ export default function Vocabulary() {
             </Text>
             <SpeakButton text={w.it} size={18} />
           </View>
+          </SwipeToDelete>
         )}
       />
     </BelowHeader>

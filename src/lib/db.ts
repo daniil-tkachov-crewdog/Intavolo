@@ -70,3 +70,7 @@ export function getSetting(key: string): string | null {
 export function setSetting(key: string, value: string) {
   db.runSync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', key, value);
 }
+
+export function deleteProgress(wordId: number) {
+  db.runSync('DELETE FROM progress WHERE word_id = ?', wordId);
+}

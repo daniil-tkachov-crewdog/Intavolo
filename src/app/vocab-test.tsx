@@ -1,16 +1,25 @@
 import { useCallback, useRef, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { useStore } from '../../lib/store';
-import { WORD_BY_ID } from '../../lib/vocab';
-import { dueAt, isDue, GOALS, STATUS_LABEL, type Outcome } from '../../lib/engine';
-import { Exercise } from '../../components/Exercise';
-import { Button } from '../../components/Button';
-import { C, STATUS_COLOR } from '../../lib/theme';
+import { useStore } from '../lib/store';
+import { WORD_BY_ID } from '../lib/vocab';
+import { dueAt, isDue, GOALS, STATUS_LABEL, type Outcome } from '../lib/engine';
+import { Exercise } from '../components/Exercise';
+import { Button } from '../components/Button';
+import { BelowHeader } from '../components/BelowHeader';
+import { C, STATUS_COLOR } from '../lib/theme';
 
 const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 
-export default function Practice() {
+export default function VocabTest() {
+  return (
+    <BelowHeader>
+      <Session />
+    </BelowHeader>
+  );
+}
+
+function Session() {
   const { progress, answer } = useStore();
   const [queue, setQueue] = useState<number[]>([]);
   const [i, setI] = useState(0);
