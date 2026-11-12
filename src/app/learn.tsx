@@ -1,0 +1,305 @@
+import { useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
+import { useStore } from '../lib/store';
+import { WORDS, WORD_BY_ID, englishOf, type Word } from '../lib/vocab';
+import { checkAnswer } from '../lib/answer';
+import { BelowHeader } from '../components/BelowHeader';
+import { Button } from '../components/Button';
+import { SpeakButton } from '../components/WordCard';
+import { C, shadow } from '../lib/theme';
+
+const BATCH = 6;
+const STEPS = ['Meet', 'Recognize', 'Match', 'Recall'] as const;
+const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
+
+export default function Learn() {
+  const { progress } = useStore();
+  const [round, setRound] = useState(0);
+  const [seen, setSeen] = useState<Set<number>>(new Set()); // learned earlier in this visit
+  // Words freshly added: still New with 0 points. Picked once per round.
+  const batch = useMemo(
+    () =>
+      shuffle(
+        [...progress.values()]
+          .filter((p) => p.status === 'new' && p.count === 0 && !seen.has(p.wordId) && WORD_BY_ID.has(p.wordId))
+          .map((p) => WORD_BY_ID.get(p.wordId)!)
+      ).slice(0, BATCH),
+    [round] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  return (
+    <BelowHeader>
+      {batch.length ? (
+        <Session key={round} words={batch} onAgain={() => {
+            setSeen((x) => new Set([...x, ...batch.map((w) => w.id)]));
+            setRound((r) => r + 1);
+          }} />
+      ) : (
+        <Center title="Nothing new to learn" text="Add words with Learn in Explore. Only New words with 0 points show up here.">
+          <View style={s.row}>
+            <Button label="Go to Explore" onPress={() => router.navigate('/')} />
+          </View>
+        </Center>
+      )}
+    </BelowHeader>
+  );
+}
+
+function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
+  const [step, setStep] = useState(0);
+  const next = () => setStep((n) => n + 1);
+
+  if (step >= STEPS.length) {
+    return (
+      <Center title="Nice work 🎉" text={`${words.length} word${words.length > 1 ? 's' : ''} learned. Now practise them in Test your vocabulary.`}>
+        <View style={[s.row, { width: 260 }]}>
+          <Button label="Learn more" outline onPress={onAgain} />
+          <Button label="Test" onPress={() => router.replace('/vocab-test')} />
+        </View>
+      </Center>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} keyboardVerticalOffset={100}>
+      <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
+        <View style={s.steps}>
+          {STEPS.map((t, i) => (
+            <View key={t} style={{ flex: 1, gap: 4 }}>
+              <View style={[s.bar, i <= step && { backgroundColor: C.primary }]} />
+              <Text style={[s.stepText, i === step && { color: C.primary }]}>{t}</Text>
+            </View>
+          ))}
+        </View>
+        {step === 0 && <Meet words={words} onDone={next} />}
+        {step === 1 && <Queue words={words} onDone={next} render={(w, done) => <Recognize word={w} words={words} onDone={done} />} />}
+        {step === 2 && <Match words={words} onDone={next} />}
+        {step === 3 && <Queue words={words} onDone={next} render={(w, done) => <Recall word={w} onDone={done} />} />}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+/** Goes through words one by one; wrong ones come back at the end. */
+function Queue({ words, onDone, render }: { words: Word[]; onDone: () => void; render: (w: Word, done: (ok: boolean) => void) => React.ReactNode }) {
+  const [queue, setQueue] = useState(() => shuffle(words));
+  const [n, setN] = useState(0);
+  const w = queue[0];
+  const done = (ok: boolean) => {
+    const rest = queue.slice(1);
+    const q = ok ? rest : [...rest, w];
+    setN((x) => x + 1);
+    if (q.length) setQueue(q);
+    else onDone();
+  };
+  return <View key={n}>{render(w, done)}</View>;
+}
+
+function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
+  const [i, setI] = useState(0);
+  const w = words[i];
+  const ex = w.examples[0];
+  return (
+    <View style={s.card}>
+      <Text style={s.counter}>
+        {i + 1} / {words.length}
+      </Text>
+      <Big word={w} />
+      <Text style={s.en}>{englishOf(w).join(', ')}</Text>
+      {!!w.pos && <Text style={s.pos}>{w.pos}</Text>}
+      {ex && (
+        <View style={s.example}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[s.exIt, { flex: 1 }]}>{ex.it}</Text>
+            <SpeakButton text={ex.it} size={18} />
+          </View>
+          <Text style={s.exEn}>{ex.en}</Text>
+        </View>
+      )}
+      <View style={s.row}>
+        {i > 0 && <Button label="Back" outline onPress={() => setI(i - 1)} />}
+        <Button label={i + 1 < words.length ? 'Got it' : 'Start practice'} onPress={() => (i + 1 < words.length ? setI(i + 1) : onDone())} />
+      </View>
+    </View>
+  );
+}
+
+function Recognize({ word, words, onDone }: { word: Word; words: Word[]; onDone: (ok: boolean) => void }) {
+  const options = useMemo(() => {
+    const mine = englishOf(word);
+    const clash = (w: Word) => w.id === word.id || englishOf(w).some((e) => mine.includes(e));
+    const fromBatch = words.filter((w) => !clash(w));
+    const extra = shuffle(WORDS.filter((w) => w.pos === word.pos && !clash(w))).slice(0, 3);
+    return shuffle([word, ...shuffle([...fromBatch, ...extra]).slice(0, 3)]);
+  }, [word, words]);
+  const [picked, setPicked] = useState<number | null>(null);
+  const done = picked !== null;
+  const ok = picked === word.id;
+
+  return (
+    <View style={s.card}>
+      <Big word={word} />
+      <View style={{ gap: 10, marginTop: 20 }}>
+        {options.map((o) => {
+          const right = o.id === word.id;
+          const bg = done && right ? C.primary : done && o.id === picked ? C.accent : C.bg;
+          return (
+            <Pressable key={o.id} disabled={done} onPress={() => setPicked(o.id)} style={[s.option, { backgroundColor: bg }]}>
+              <Text style={[s.optionText, done && (right || o.id === picked) && { color: '#fff' }]}>{o.en}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {done && <Result ok={ok} onNext={() => onDone(ok)} />}
+    </View>
+  );
+}
+
+function Match({ words, onDone }: { words: Word[]; onDone: () => void }) {
+  const left = useMemo(() => shuffle(words), [words]);
+  const right = useMemo(() => shuffle(words), [words]);
+  const [sel, setSel] = useState<{ side: 'l' | 'r'; id: number } | null>(null);
+  const [matched, setMatched] = useState<Set<number>>(new Set());
+  const [wrong, setWrong] = useState<{ l: number; r: number } | null>(null);
+
+  const tap = (side: 'l' | 'r', id: number) => {
+    setWrong(null);
+    if (!sel || sel.side === side) return setSel({ side, id });
+    if (sel.id === id) {
+      const m = new Set(matched).add(id);
+      setMatched(m);
+      setSel(null);
+      if (m.size === words.length) setTimeout(onDone, 400);
+    } else {
+      setWrong(side === 'l' ? { l: id, r: sel.id } : { l: sel.id, r: id });
+      setSel(null);
+    }
+  };
+
+  const cell = (side: 'l' | 'r', w: Word) => {
+    const done = matched.has(w.id);
+    const on = sel?.side === side && sel.id === w.id;
+    const bad = wrong?.[side] === w.id;
+    return (
+      <Pressable
+        key={w.id}
+        disabled={done}
+        onPress={() => tap(side, w.id)}
+        style={[s.cell, on && { borderColor: C.primary, backgroundColor: C.primary + '18' }, bad && { borderColor: C.accent }, done && { opacity: 0.3 }]}
+      >
+        <Text style={s.cellText} numberOfLines={2}>
+          {side === 'l' ? w.it : w.en}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={s.card}>
+      <Text style={s.hintText}>Tap the matching pairs</Text>
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+        <View style={{ flex: 1, gap: 8 }}>{left.map((w) => cell('l', w))}</View>
+        <View style={{ flex: 1, gap: 8 }}>{right.map((w) => cell('r', w))}</View>
+      </View>
+    </View>
+  );
+}
+
+function Recall({ word, onDone }: { word: Word; onDone: (ok: boolean) => void }) {
+  const accepted = englishOf(word);
+  const [text, setText] = useState('');
+  const [ok, setOk] = useState<boolean | null>(null);
+  const check = () => setOk(checkAnswer(text, accepted) !== 'wrong');
+
+  return (
+    <View style={s.card}>
+      <Big word={word} />
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        editable={ok === null}
+        placeholder="Type in English"
+        placeholderTextColor={C.muted}
+        autoCapitalize="none"
+        autoCorrect={false}
+        spellCheck={false}
+        returnKeyType="done"
+        onSubmitEditing={() => text.trim() && ok === null && check()}
+        style={s.input}
+      />
+      {ok === null ? (
+        <View style={s.row}>
+          <Button label="Show me" outline color={C.muted} onPress={() => setOk(false)} />
+          <Button label="Check" disabled={!text.trim()} onPress={check} />
+        </View>
+      ) : (
+        <>
+          {!ok && <Text style={s.answer}>Answer: {accepted.join(', ')}</Text>}
+          <Result ok={ok} onNext={() => onDone(ok)} />
+        </>
+      )}
+    </View>
+  );
+}
+
+function Big({ word }: { word: Word }) {
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Text style={s.big}>{word.it}</Text>
+        <SpeakButton text={word.it} />
+      </View>
+      {!!word.ipa && <Text style={s.sub}>{word.ipa}</Text>}
+    </View>
+  );
+}
+
+function Result({ ok, onNext }: { ok: boolean; onNext: () => void }) {
+  return (
+    <View style={{ marginTop: 16, gap: 12 }}>
+      <Text style={[s.msg, { color: ok ? C.primary : C.accent }]}>{ok ? 'Correct!' : "Not quite. You'll see it again."}</Text>
+      <View style={s.row}>
+        <Button label="Next" onPress={onNext} />
+      </View>
+    </View>
+  );
+}
+
+function Center({ title, text, children }: { title: string; text: string; children?: React.ReactNode }) {
+  return (
+    <View style={s.center}>
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.text}>{text}</Text>
+      {children}
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  wrap: { padding: 16, paddingBottom: 40 },
+  steps: { flexDirection: 'row', gap: 6, marginBottom: 14 },
+  bar: { height: 4, borderRadius: 2, backgroundColor: C.border },
+  stepText: { fontSize: 12, color: C.muted, fontWeight: '600', textAlign: 'center' },
+  card: { backgroundColor: C.card, borderRadius: 24, padding: 24, ...shadow },
+  counter: { color: C.muted, textAlign: 'right', marginBottom: 8 },
+  big: { fontSize: 34, fontWeight: '700', color: C.text, textAlign: 'center' },
+  sub: { fontSize: 16, color: C.muted, marginTop: 4 },
+  en: { fontSize: 22, fontWeight: '600', color: C.primary, textAlign: 'center', marginTop: 16 },
+  pos: { fontSize: 13, color: C.muted, textAlign: 'center', marginTop: 4 },
+  example: { backgroundColor: C.bg, borderRadius: 14, padding: 14, marginTop: 18, gap: 4 },
+  exIt: { fontSize: 16, color: C.text, fontStyle: 'italic' },
+  exEn: { fontSize: 14, color: C.muted },
+  option: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: C.border },
+  optionText: { fontSize: 17, color: C.text, textAlign: 'center' },
+  cell: { minHeight: 52, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.bg, padding: 8, alignItems: 'center', justifyContent: 'center' },
+  cellText: { fontSize: 15, color: C.text, textAlign: 'center', fontWeight: '500' },
+  hintText: { color: C.muted, textAlign: 'center' },
+  input: { marginTop: 24, borderWidth: 1.5, borderColor: C.border, borderRadius: 14, padding: 14, fontSize: 20, color: C.text, backgroundColor: C.bg },
+  answer: { fontSize: 16, color: C.text, textAlign: 'center', marginTop: 14 },
+  msg: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  row: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  title: { fontSize: 22, fontWeight: '700', color: C.text },
+  text: { fontSize: 16, color: C.muted, marginTop: 8, textAlign: 'center' },
+});

@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="vocabulary" options={{ title: 'Vocabulary', headerBackTitle: 'Profile' }} />
         <Stack.Screen name="topics" options={{ title: 'Topics', headerBackTitle: 'Explore' }} />
+        <Stack.Screen name="learn" options={{ title: 'Learn new words', headerBackTitle: 'Exercise' }} />
         <Stack.Screen name="vocab-test" options={{ title: 'Test your vocabulary', headerBackTitle: 'Exercise' }} />
         <Stack.Screen name="topic/[name]" options={{ title: '', headerBackTitle: 'Topics' }} />
       </Stack>

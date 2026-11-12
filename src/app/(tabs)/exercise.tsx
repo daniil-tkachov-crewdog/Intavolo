@@ -8,7 +8,7 @@ type Item = { title: string; icon: ComponentProps<typeof Ionicons>['name']; href
 
 const ITEMS: Item[] = [
   { title: 'Test your vocabulary', icon: 'albums', href: '/vocab-test' },
-  { title: 'Learn new words', icon: 'sparkles' },
+  { title: 'Learn new words', icon: 'sparkles', href: '/learn' },
   { title: 'Sentences', icon: 'chatbubbles' },
   { title: 'Grammar test', icon: 'book' },
 ];
