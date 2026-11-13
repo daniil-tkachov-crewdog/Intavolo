@@ -40,7 +40,7 @@ export default function ExerciseMenu() {
 }
 
 const useStyles = makeStyles((c) => ({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 24 },
+  grid: { flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', alignContent: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 24 },
   tile: { flexBasis: '45%', flexGrow: 1, minHeight: 150, backgroundColor: c.card, borderRadius: 24, borderWidth: 1, borderColor: c.border, padding: 18, gap: 14 },
   title: { ...F.semibold, fontSize: 17, color: c.text },
   badge: { ...F.semibold, fontSize: 12, color: c.accent.amber.text, backgroundColor: c.accent.amber.soft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start', overflow: 'hidden' },

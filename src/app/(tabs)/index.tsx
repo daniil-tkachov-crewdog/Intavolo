@@ -63,8 +63,8 @@ export default function Explore() {
         >
           <Ionicons name="play-skip-forward" size={20} color={c.muted} />
         </Pressable>
-        <Button label="Already know" variant="success" icon="checkmark-circle" onPress={toggle} />
-        <Button label="Learn" icon="add" style={{ flex: 1.2 }} onPress={() => next(() => addWord(word.id, 'new'))} />
+        <Button label="Already know" variant="success" icon="checkmark-circle" style={{ flex: 1.35, paddingHorizontal: 16 }} onPress={toggle} />
+        <Button label="Learn" icon="add" onPress={() => next(() => addWord(word.id, 'new'))} />
       </View>
       {open && <StatusDropdown onPick={(st: Status) => next(() => addWord(word.id, st))} />}
 

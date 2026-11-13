@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore, SPEECH_RATES, type SpeechRate } from '../../lib/store';
 import { STATUSES, STATUS_LABEL } from '../../lib/engine';
@@ -47,13 +47,11 @@ export default function Profile() {
         </View>
       </View>
 
-      <Link href="/vocabulary" asChild>
-        <Pressable style={({ pressed }) => [s.card, s.link, pressed && { opacity: 0.7 }]}>
-          <IconTile icon="bookmarks" accent="purple" />
-          <Text style={s.linkText}>My words</Text>
-          <Ionicons name="chevron-forward" size={16} color={c.muted} />
-        </Pressable>
-      </Link>
+      <Pressable onPress={() => router.push('/vocabulary')} style={({ pressed }) => [s.card, s.link, pressed && { opacity: 0.7 }]}>
+        <IconTile icon="bookmarks" accent="purple" />
+        <Text style={s.linkText}>My words</Text>
+        <Ionicons name="chevron-forward" size={16} color={c.muted} />
+      </Pressable>
 
       <View style={[s.card, s.settings]}>
         <Setting title="Speech speed">
