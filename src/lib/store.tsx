@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as Speech from 'expo-speech';
 import * as db from './db';
+import { onDataChanged, scheduleSync } from './sync';
 import { applyAnswer, createProgress, type AnswerResult, type Outcome, type Progress, type Status } from './engine';
 
 export const SPEECH_RATES = { Slow: 0.6, Normal: 0.9, Fast: 1.1 } as const;
@@ -26,8 +27,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [skipped, setSkipped] = useState(() => db.loadSkipped());
   const [speechRate, setRate] = useState<SpeechRate>(() => (db.getSetting('speechRate') as SpeechRate) || 'Normal');
 
+  // Reload after a sync pull or a wipe changed the DB underneath us.
+  useEffect(
+    () =>
+      onDataChanged(() => {
+        setProgress(new Map(db.loadProgress().map((p) => [p.wordId, p])));
+        setSkipped(db.loadSkipped());
+      }),
+    []
+  );
+
   const put = useCallback((p: Progress) => {
     db.saveProgress(p);
+    scheduleSync();
     setProgress((m) => new Map(m).set(p.wordId, p));
     setSkipped((m) => {
       if (!m.has(p.wordId)) return m;
@@ -43,6 +55,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const now = Date.now();
     const list = wordIds.map((id) => createProgress(id, status, now));
     db.transaction(() => list.forEach(db.saveProgress));
+    scheduleSync();
     setProgress((m) => {
       const n = new Map(m);
       for (const p of list) n.set(p.wordId, p);
@@ -63,6 +76,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const removeWord = useCallback((wordId: number) => {
     db.deleteProgress(wordId);
+    scheduleSync();
     setProgress((m) => {
       if (!m.has(wordId)) return m;
       const n = new Map(m);

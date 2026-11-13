@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -79,15 +79,16 @@ export default function Profile() {
       </View>
 
       <View style={[s.card, s.list]}>
-        {['Account', 'Payment'].map((t) => (
-          <Fragment key={t}>
-            <View style={s.item}>
-              <Text style={s.itemText}>{t}</Text>
-              <Text style={s.soon}>Coming soon</Text>
-            </View>
-            <View style={s.sep} />
-          </Fragment>
-        ))}
+        <Pressable onPress={() => router.push('/account')} style={({ pressed }) => [s.item, pressed && { opacity: 0.7 }]}>
+          <Text style={s.itemText}>Account</Text>
+          <Ionicons name="chevron-forward" size={16} color={c.muted} />
+        </Pressable>
+        <View style={s.sep} />
+        <View style={s.item}>
+          <Text style={s.itemText}>Payment</Text>
+          <Text style={s.soon}>Coming soon</Text>
+        </View>
+        <View style={s.sep} />
         <View style={s.credits}>
           <Text style={s.creditsTitle}>Credits</Text>
           <Text style={s.small}>
