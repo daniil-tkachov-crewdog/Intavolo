@@ -1,10 +1,10 @@
 import { memo, useState } from 'react';
-import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LayoutAnimation, Pressable, Text, View } from 'react-native';
 import type { Word } from '../lib/vocab';
 import { STATUS_LABEL, type Status } from '../lib/engine';
 import { SpeakButton } from './WordCard';
 import { StatusDropdown } from './StatusDropdown';
-import { C, STATUS_COLOR } from '../lib/theme';
+import { F, makeStyles, useTheme } from '../lib/theme';
 
 interface Props {
   word: Word;
@@ -14,6 +14,8 @@ interface Props {
 
 /** One word in Topics / Search lists, with Learn and Already Know. */
 export const WordRow = memo(function WordRow({ word, status, onAdd }: Props) {
+  const s = useStyles();
+  const { c } = useTheme();
   const [open, setOpen] = useState(false);
   const add = (st: Status) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -22,8 +24,8 @@ export const WordRow = memo(function WordRow({ word, status, onAdd }: Props) {
   };
 
   return (
-    <View style={s.row}>
-      <View style={s.top}>
+    <View style={{ gap: 8 }}>
+      <View style={s.row}>
         <View style={{ flex: 1 }}>
           <Text style={s.it}>{word.it}</Text>
           <Text style={s.en} numberOfLines={1}>
@@ -33,20 +35,20 @@ export const WordRow = memo(function WordRow({ word, status, onAdd }: Props) {
         </View>
         <SpeakButton text={word.it} size={18} />
         {status ? (
-          <Text style={[s.status, { color: STATUS_COLOR[status] }]}>{STATUS_LABEL[status]}</Text>
+          <Text style={[s.status, { color: c.status[status].text, backgroundColor: c.status[status].soft }]}>{STATUS_LABEL[status]}</Text>
         ) : (
           <View style={s.actions}>
-            <Pressable onPress={() => add('new')} style={[s.btn, { backgroundColor: C.primary }]}>
-              <Text style={[s.btnText, { color: '#fff' }]}>Learn</Text>
-            </Pressable>
             <Pressable
               onPress={() => {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 setOpen((o) => !o);
               }}
-              style={[s.btn, { borderColor: C.primary, borderWidth: 1.5 }]}
+              style={[s.btn, { backgroundColor: c.accent.green.soft }]}
             >
-              <Text style={[s.btnText, { color: C.primary }]}>Know</Text>
+              <Text style={[s.btnText, { color: c.accent.green.text }]}>Know</Text>
+            </Pressable>
+            <Pressable onPress={() => add('new')} style={[s.btn, { backgroundColor: c.primary }]}>
+              <Text style={[s.btnText, { color: '#FFFFFF' }]}>Learn</Text>
             </Pressable>
           </View>
         )}
@@ -56,14 +58,13 @@ export const WordRow = memo(function WordRow({ word, status, onAdd }: Props) {
   );
 });
 
-const s = StyleSheet.create({
-  row: { backgroundColor: C.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: C.border },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  it: { fontSize: 17, fontWeight: '600', color: C.text },
-  en: { fontSize: 14, color: C.text, marginTop: 2 },
-  alt: { color: C.muted },
-  status: { fontSize: 13, fontWeight: '600', paddingHorizontal: 6 },
+const useStyles = makeStyles((c) => ({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.card, borderRadius: 18, paddingVertical: 12, paddingLeft: 14, paddingRight: 10, borderWidth: 1, borderColor: c.border },
+  it: { ...F.semibold, fontSize: 17, color: c.text },
+  en: { ...F.regular, fontSize: 14, color: c.text, marginTop: 2 },
+  alt: { color: c.muted },
+  status: { ...F.semibold, fontSize: 12, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
   actions: { flexDirection: 'row', gap: 6 },
-  btn: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10 },
-  btnText: { fontSize: 13, fontWeight: '600' },
-});
+  btn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
+  btnText: { ...F.semibold, fontSize: 13 },
+}));

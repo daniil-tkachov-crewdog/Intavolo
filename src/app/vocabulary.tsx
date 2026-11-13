@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { useStore } from '../lib/store';
 import { WORD_BY_ID, englishOf } from '../lib/vocab';
 import { GOALS, STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
 import { BelowHeader } from '../components/BelowHeader';
 import { SpeakButton } from '../components/WordCard';
 import { SwipeToDelete } from '../components/SwipeToDelete';
-import { C, STATUS_COLOR } from '../lib/theme';
+import { F, makeStyles, useTheme } from '../lib/theme';
 
 export default function Vocabulary() {
+  const s = useStyles();
+  const { c } = useTheme();
   const { progress, removeWord } = useStore();
   const [filter, setFilter] = useState<Status | 'all'>('all');
 
@@ -26,10 +28,10 @@ export default function Vocabulary() {
       <View style={s.filters}>
         {(['all', ...STATUSES] as const).map((f) => {
           const on = filter === f;
-          const color = f === 'all' ? C.text : STATUS_COLOR[f];
+          const tone = f === 'all' ? { fg: c.primary, soft: c.surface, text: c.text } : c.status[f];
           return (
-            <Pressable key={f} onPress={() => setFilter(f)} style={[s.chip, { borderColor: color }, on && { backgroundColor: color }]}>
-              <Text style={[s.chipText, { color: on ? '#fff' : color }]}>{f === 'all' ? 'All' : STATUS_LABEL[f]}</Text>
+            <Pressable key={f} onPress={() => setFilter(f)} style={[s.chip, { backgroundColor: on ? tone.fg : tone.soft }]}>
+              <Text style={[s.chipText, { color: on ? '#FFFFFF' : tone.text }]}>{f === 'all' ? 'All' : STATUS_LABEL[f]}</Text>
             </Pressable>
           );
         })}
@@ -41,17 +43,17 @@ export default function Vocabulary() {
         ListEmptyComponent={<Text style={s.empty}>No words here yet.</Text>}
         renderItem={({ item: { p, w } }) => (
           <SwipeToDelete onDelete={() => removeWord(p.wordId)}>
-          <View style={s.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.it}>{w.it}</Text>
-              <Text style={s.en}>{englishOf(w).join(', ')}</Text>
+            <View style={s.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.it}>{w.it}</Text>
+                <Text style={s.en}>{englishOf(w).join(', ')}</Text>
+              </View>
+              <Text style={[s.status, { color: c.status[p.status].text, backgroundColor: c.status[p.status].soft }]}>
+                {STATUS_LABEL[p.status]}
+                {p.status !== 'mastered' ? ` ${p.count}/${GOALS[p.status]}` : ''}
+              </Text>
+              <SpeakButton text={w.it} size={18} />
             </View>
-            <Text style={[s.status, { color: STATUS_COLOR[p.status] }]}>
-              {STATUS_LABEL[p.status]}
-              {p.status !== 'mastered' ? ` ${p.count}/${GOALS[p.status]}` : ''}
-            </Text>
-            <SpeakButton text={w.it} size={18} />
-          </View>
           </SwipeToDelete>
         )}
       />
@@ -59,13 +61,13 @@ export default function Vocabulary() {
   );
 }
 
-const s = StyleSheet.create({
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, paddingTop: 12 },
-  chip: { borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
-  chipText: { fontSize: 13, fontWeight: '600' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border },
-  it: { fontSize: 17, fontWeight: '600', color: C.text },
-  en: { fontSize: 14, color: C.muted, marginTop: 2 },
-  status: { fontSize: 13, fontWeight: '600' },
-  empty: { textAlign: 'center', color: C.muted, marginTop: 40 },
-});
+const useStyles = makeStyles((c) => ({
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, paddingTop: 4 },
+  chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  chipText: { ...F.semibold, fontSize: 13 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.card, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: c.border },
+  it: { ...F.semibold, fontSize: 17, color: c.text },
+  en: { ...F.regular, fontSize: 14, color: c.muted, marginTop: 2 },
+  status: { ...F.semibold, fontSize: 12, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
+  empty: { ...F.regular, textAlign: 'center', color: c.muted, marginTop: 40 },
+}));

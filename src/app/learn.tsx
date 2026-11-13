@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useStore } from '../lib/store';
 import { WORDS, WORD_BY_ID, englishOf, type Word } from '../lib/vocab';
@@ -7,13 +8,15 @@ import { checkAnswer } from '../lib/answer';
 import { BelowHeader } from '../components/BelowHeader';
 import { Button } from '../components/Button';
 import { SpeakButton } from '../components/WordCard';
-import { C, shadow } from '../lib/theme';
+import { F, makeStyles, useTheme } from '../lib/theme';
 
 const BATCH = 6;
 const STEPS = ['Meet', 'Recognize', 'Match', 'Recall'] as const;
 const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 
 export default function Learn() {
+  const s = useStyles();
+  const { c } = useTheme();
   const { progress } = useStore();
   const [round, setRound] = useState(0);
   const [seen, setSeen] = useState<Set<number>>(new Set()); // learned earlier in this visit
@@ -47,6 +50,8 @@ export default function Learn() {
 }
 
 function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
   const [step, setStep] = useState(0);
   const next = () => setStep((n) => n + 1);
 
@@ -54,7 +59,7 @@ function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
     return (
       <Center title="Nice work 🎉" text={`${words.length} word${words.length > 1 ? 's' : ''} learned. Now practise them in Test your vocabulary.`}>
         <View style={[s.row, { width: 260 }]}>
-          <Button label="Learn more" outline onPress={onAgain} />
+          <Button label="Learn more" variant="secondary" onPress={onAgain} />
           <Button label="Test" onPress={() => router.replace('/vocab-test')} />
         </View>
       </Center>
@@ -67,8 +72,8 @@ function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
         <View style={s.steps}>
           {STEPS.map((t, i) => (
             <View key={t} style={{ flex: 1, gap: 4 }}>
-              <View style={[s.bar, i <= step && { backgroundColor: C.primary }]} />
-              <Text style={[s.stepText, i === step && { color: C.primary }]}>{t}</Text>
+              <View style={[s.bar, i <= step && { backgroundColor: c.primary }]} />
+              <Text style={[s.stepText, i === step && { color: c.primary }]}>{t}</Text>
             </View>
           ))}
         </View>
@@ -97,6 +102,8 @@ function Queue({ words, onDone, render }: { words: Word[]; onDone: () => void; r
 }
 
 function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
   const [i, setI] = useState(0);
   const w = words[i];
   const ex = w.examples[0];
@@ -118,7 +125,7 @@ function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
         </View>
       )}
       <View style={s.row}>
-        {i > 0 && <Button label="Back" outline onPress={() => setI(i - 1)} />}
+        {i > 0 && <Button label="Back" variant="secondary" onPress={() => setI(i - 1)} />}
         <Button label={i + 1 < words.length ? 'Got it' : 'Start practice'} onPress={() => (i + 1 < words.length ? setI(i + 1) : onDone())} />
       </View>
     </View>
@@ -126,6 +133,8 @@ function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
 }
 
 function Recognize({ word, words, onDone }: { word: Word; words: Word[]; onDone: (ok: boolean) => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
   const options = useMemo(() => {
     const mine = englishOf(word);
     const clash = (w: Word) => w.id === word.id || englishOf(w).some((e) => mine.includes(e));
@@ -143,10 +152,11 @@ function Recognize({ word, words, onDone }: { word: Word; words: Word[]; onDone:
       <View style={{ gap: 10, marginTop: 20 }}>
         {options.map((o) => {
           const right = o.id === word.id;
-          const bg = done && right ? C.primary : done && o.id === picked ? C.accent : C.bg;
+          const solid = done && right ? c.accent.green.fg : done && o.id === picked ? c.accent.red.fg : null;
           return (
-            <Pressable key={o.id} disabled={done} onPress={() => setPicked(o.id)} style={[s.option, { backgroundColor: bg }]}>
-              <Text style={[s.optionText, done && (right || o.id === picked) && { color: '#fff' }]}>{o.en}</Text>
+            <Pressable key={o.id} disabled={done} onPress={() => setPicked(o.id)} style={[s.option, { backgroundColor: solid ?? c.surface }]}>
+              <Text style={[s.optionText, solid && s.optionOn]}>{o.en}</Text>
+              {solid && <Ionicons name={right ? 'checkmark-circle' : 'close-circle'} size={20} color="#FFFFFF" style={s.optionIcon} />}
             </Pressable>
           );
         })}
@@ -157,6 +167,8 @@ function Recognize({ word, words, onDone }: { word: Word; words: Word[]; onDone:
 }
 
 function Match({ words, onDone }: { words: Word[]; onDone: () => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
   const left = useMemo(() => shuffle(words), [words]);
   const right = useMemo(() => shuffle(words), [words]);
   const [sel, setSel] = useState<{ side: 'l' | 'r'; id: number } | null>(null);
@@ -186,7 +198,7 @@ function Match({ words, onDone }: { words: Word[]; onDone: () => void }) {
         key={w.id}
         disabled={done}
         onPress={() => tap(side, w.id)}
-        style={[s.cell, on && { borderColor: C.primary, backgroundColor: C.primary + '18' }, bad && { borderColor: C.accent }, done && { opacity: 0.3 }]}
+        style={[s.cell, on && { borderColor: c.primary, backgroundColor: c.accent.purple.soft }, bad && { borderColor: c.accent.red.fg }, done && { opacity: 0.3 }]}
       >
         <Text style={s.cellText} numberOfLines={2}>
           {side === 'l' ? w.it : w.en}
@@ -207,6 +219,8 @@ function Match({ words, onDone }: { words: Word[]; onDone: () => void }) {
 }
 
 function Recall({ word, onDone }: { word: Word; onDone: (ok: boolean) => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
   const accepted = englishOf(word);
   const [text, setText] = useState('');
   const [ok, setOk] = useState<boolean | null>(null);
@@ -220,7 +234,7 @@ function Recall({ word, onDone }: { word: Word; onDone: (ok: boolean) => void })
         onChangeText={setText}
         editable={ok === null}
         placeholder="Type in English"
-        placeholderTextColor={C.muted}
+        placeholderTextColor={c.muted}
         autoCapitalize="none"
         autoCorrect={false}
         spellCheck={false}
@@ -230,7 +244,7 @@ function Recall({ word, onDone }: { word: Word; onDone: (ok: boolean) => void })
       />
       {ok === null ? (
         <View style={s.row}>
-          <Button label="Show me" outline color={C.muted} onPress={() => setOk(false)} />
+          <Button label="Show me" variant="secondary" onPress={() => setOk(false)} />
           <Button label="Check" disabled={!text.trim()} onPress={check} />
         </View>
       ) : (
@@ -244,11 +258,13 @@ function Recall({ word, onDone }: { word: Word; onDone: (ok: boolean) => void })
 }
 
 function Big({ word }: { word: Word }) {
+  const s = useStyles();
+  const { c } = useTheme();
   return (
     <View style={{ alignItems: 'center' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <Text style={s.big}>{word.it}</Text>
-        <SpeakButton text={word.it} />
+        <SpeakButton text={word.it} size={20} look="soft" />
       </View>
       {!!word.ipa && <Text style={s.sub}>{word.ipa}</Text>}
     </View>
@@ -256,17 +272,25 @@ function Big({ word }: { word: Word }) {
 }
 
 function Result({ ok, onNext }: { ok: boolean; onNext: () => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
+  const tone = ok ? c.accent.green : c.accent.red;
   return (
     <View style={{ marginTop: 16, gap: 12 }}>
-      <Text style={[s.msg, { color: ok ? C.primary : C.accent }]}>{ok ? 'Correct!' : "Not quite. You'll see it again."}</Text>
+      <View style={[s.banner, { backgroundColor: tone.soft }]}>
+        <Ionicons name={ok ? 'sparkles' : 'close-circle'} size={20} color={tone.text} />
+        <Text style={[s.msg, { color: tone.text }]}>{ok ? 'Correct!' : "Not quite. You'll see it again."}</Text>
+      </View>
       <View style={s.row}>
-        <Button label="Next" onPress={onNext} />
+        <Button label="Next" iconRight="arrow-forward" onPress={onNext} />
       </View>
     </View>
   );
 }
 
 function Center({ title, text, children }: { title: string; text: string; children?: React.ReactNode }) {
+  const s = useStyles();
+  const { c } = useTheme();
   return (
     <View style={s.center}>
       <Text style={s.title}>{title}</Text>
@@ -276,30 +300,33 @@ function Center({ title, text, children }: { title: string; text: string; childr
   );
 }
 
-const s = StyleSheet.create({
-  wrap: { padding: 16, paddingBottom: 40 },
+const useStyles = makeStyles((c) => ({
+  wrap: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 },
   steps: { flexDirection: 'row', gap: 6, marginBottom: 14 },
-  bar: { height: 4, borderRadius: 2, backgroundColor: C.border },
-  stepText: { fontSize: 12, color: C.muted, fontWeight: '600', textAlign: 'center' },
-  card: { backgroundColor: C.card, borderRadius: 24, padding: 24, ...shadow },
-  counter: { color: C.muted, textAlign: 'right', marginBottom: 8 },
-  big: { fontSize: 34, fontWeight: '700', color: C.text, textAlign: 'center' },
-  sub: { fontSize: 16, color: C.muted, marginTop: 4 },
-  en: { fontSize: 22, fontWeight: '600', color: C.primary, textAlign: 'center', marginTop: 16 },
-  pos: { fontSize: 13, color: C.muted, textAlign: 'center', marginTop: 4 },
-  example: { backgroundColor: C.bg, borderRadius: 14, padding: 14, marginTop: 18, gap: 4 },
-  exIt: { fontSize: 16, color: C.text, fontStyle: 'italic' },
-  exEn: { fontSize: 14, color: C.muted },
-  option: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: C.border },
-  optionText: { fontSize: 17, color: C.text, textAlign: 'center' },
-  cell: { minHeight: 52, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.bg, padding: 8, alignItems: 'center', justifyContent: 'center' },
-  cellText: { fontSize: 15, color: C.text, textAlign: 'center', fontWeight: '500' },
-  hintText: { color: C.muted, textAlign: 'center' },
-  input: { marginTop: 24, borderWidth: 1.5, borderColor: C.border, borderRadius: 14, padding: 14, fontSize: 20, color: C.text, backgroundColor: C.bg },
-  answer: { fontSize: 16, color: C.text, textAlign: 'center', marginTop: 14 },
-  msg: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  row: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  bar: { height: 4, borderRadius: 2, backgroundColor: c.border },
+  stepText: { ...F.semibold, fontSize: 12, color: c.muted, textAlign: 'center' },
+  card: { backgroundColor: c.card, borderRadius: 28, padding: 22, borderWidth: 1, borderColor: c.border },
+  counter: { ...F.regular, fontSize: 14, color: c.muted, textAlign: 'right', marginBottom: 8 },
+  big: { ...F.bold, fontSize: 38, letterSpacing: -0.76, color: c.text, textAlign: 'center', flexShrink: 1 },
+  sub: { ...F.regular, fontSize: 17, color: c.muted, marginTop: 4 },
+  en: { ...F.semibold, fontSize: 26, letterSpacing: -0.26, color: c.accent.purple.text, textAlign: 'center', marginTop: 18 },
+  pos: { ...F.regular, fontSize: 13, color: c.muted, fontStyle: 'italic', textAlign: 'center', marginTop: 4 },
+  example: { backgroundColor: c.surface, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 14, marginTop: 18, gap: 2 },
+  exIt: { ...F.regular, fontSize: 16, color: c.text },
+  exEn: { ...F.regular, fontSize: 14, color: c.muted },
+  option: { height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 44 },
+  optionText: { ...F.regular, fontSize: 17, color: c.text, textAlign: 'center' },
+  optionOn: { ...F.semibold, color: '#FFFFFF' },
+  optionIcon: { position: 'absolute', right: 16 },
+  cell: { minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: c.border, backgroundColor: c.surface, padding: 8, alignItems: 'center', justifyContent: 'center' },
+  cellText: { ...F.medium, fontSize: 15, color: c.text, textAlign: 'center' },
+  hintText: { ...F.regular, color: c.muted, textAlign: 'center' },
+  input: { ...F.regular, marginTop: 24, borderWidth: 1.5, borderColor: c.border, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, fontSize: 20, color: c.text, backgroundColor: c.surface },
+  answer: { ...F.medium, fontSize: 16, color: c.text, textAlign: 'center', marginTop: 14 },
+  banner: { borderRadius: 20, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  msg: { ...F.semibold, fontSize: 16, flex: 1 },
+  row: { flexDirection: 'row', gap: 8, marginTop: 20 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  title: { fontSize: 22, fontWeight: '700', color: C.text },
-  text: { fontSize: 16, color: C.muted, marginTop: 8, textAlign: 'center' },
-});
+  title: { ...F.bold, fontSize: 22, color: c.text },
+  text: { ...F.regular, fontSize: 16, color: c.muted, marginTop: 8, textAlign: 'center' },
+}));

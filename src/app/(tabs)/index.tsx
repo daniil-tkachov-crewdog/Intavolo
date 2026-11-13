@@ -1,14 +1,17 @@
 import { useMemo, useRef, useState } from 'react';
-import { Animated, LayoutAnimation, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, LayoutAnimation, Pressable, ScrollView, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../lib/store';
 import { WORDS, SHUFFLE_KEY } from '../../lib/vocab';
 import type { Status } from '../../lib/engine';
 import { WordCard } from '../../components/WordCard';
 import { StatusDropdown } from '../../components/StatusDropdown';
 import { Button } from '../../components/Button';
-import { C } from '../../lib/theme';
+import { F, makeStyles, useTheme } from '../../lib/theme';
 
 export default function Explore() {
+  const s = useStyles();
+  const { c } = useTheme();
   const { progress, skipped, addWord, skipWord } = useStore();
   const [open, setOpen] = useState(false);
   const fade = useRef(new Animated.Value(1)).current;
@@ -52,22 +55,30 @@ export default function Explore() {
       </Animated.View>
 
       <View style={s.buttons}>
-        <Button label="Learn" onPress={() => next(() => addWord(word.id, 'new'))} />
-        <Button label="Already Know" outline onPress={toggle} />
-        <Button label="Skip" outline color={C.muted} onPress={() => next(() => skipWord(word.id))} />
+        <Pressable
+          onPress={() => next(() => skipWord(word.id))}
+          accessibilityRole="button"
+          accessibilityLabel="Skip"
+          style={({ pressed }) => [s.skip, pressed && { opacity: 0.55 }]}
+        >
+          <Ionicons name="play-skip-forward" size={20} color={c.muted} />
+        </Pressable>
+        <Button label="Already know" variant="success" icon="checkmark-circle" onPress={toggle} />
+        <Button label="Learn" icon="add" style={{ flex: 1.2 }} onPress={() => next(() => addWord(word.id, 'new'))} />
       </View>
       {open && <StatusDropdown onPick={(st: Status) => next(() => addWord(word.id, st))} />}
 
-      <Text style={s.left}>{feed.length} words to explore</Text>
+      <Text style={s.left}>{feed.length.toLocaleString('en-US')} words to explore</Text>
     </ScrollView>
   );
 }
 
-const s = StyleSheet.create({
-  wrap: { padding: 16, paddingBottom: 40 },
-  buttons: { flexDirection: 'row', gap: 8, marginTop: 16 },
-  left: { textAlign: 'center', color: C.muted, marginTop: 20, fontSize: 13 },
+const useStyles = makeStyles((c) => ({
+  wrap: { paddingHorizontal: 16, paddingBottom: 40, gap: 14 },
+  buttons: { flexDirection: 'row', gap: 8 },
+  skip: { width: 54, height: 54, borderRadius: 18, backgroundColor: c.card, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center' },
+  left: { ...F.regular, textAlign: 'center', color: c.muted, fontSize: 13 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  emptyTitle: { fontSize: 22, fontWeight: '700', color: C.text },
-  emptyText: { fontSize: 16, color: C.muted, marginTop: 8 },
-});
+  emptyTitle: { ...F.bold, fontSize: 22, color: c.text },
+  emptyText: { ...F.regular, fontSize: 16, color: c.muted, marginTop: 8 },
+}));

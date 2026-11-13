@@ -1,42 +1,45 @@
 import type { ComponentProps } from 'react';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Text, type ColorValue } from 'react-native';
+import { router, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { C } from '../../lib/theme';
+import { F, useTheme } from '../../lib/theme';
+import { HeaderButton, TabHeader } from '../../components/Header';
 
 type Icon = keyof typeof Ionicons.glyphMap;
 type IconColor = ComponentProps<typeof Ionicons>['color'];
-const icon = (name: Icon) => ({ color, size }: { color: unknown; size: number }) => (
-  <Ionicons name={name} color={color as IconColor} size={size} />
-);
+
+/** Filled icon when the tab is active, outline otherwise. */
+const tab = (title: string, name: Icon) => ({
+  title,
+  tabBarIcon: ({ color, focused }: { color: unknown; focused: boolean }) => (
+    <Ionicons name={focused ? name : (`${name}-outline` as Icon)} color={color as IconColor} size={25} />
+  ),
+  tabBarLabel: ({ color, focused }: { color: ColorValue; focused: boolean }) => (
+    <Text style={[focused ? F.semibold : F.medium, { color, fontSize: 11, marginTop: 3 }]}>{title}</Text>
+  ),
+});
 
 export default function TabsLayout() {
+  const { c } = useTheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: C.primary,
-        tabBarInactiveTintColor: C.muted,
-        headerStyle: { backgroundColor: C.bg },
-        headerShadowVisible: false,
-        sceneStyle: { backgroundColor: C.bg },
+        tabBarActiveTintColor: c.primary,
+        tabBarInactiveTintColor: c.muted,
+        tabBarStyle: { backgroundColor: c.card, borderTopColor: c.border, borderTopWidth: 1, paddingTop: 10 },
+        sceneStyle: { backgroundColor: c.bg },
+        header: ({ options }) => <TabHeader title={options.title ?? ''} right={options.headerRight?.({ canGoBack: false })} />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Explore',
-          tabBarIcon: icon('compass'),
-          headerRight: () => (
-            <Link href="/topics" asChild>
-              <Pressable hitSlop={10} style={{ paddingHorizontal: 16 }} accessibilityLabel="Topics and search">
-                <Ionicons name="albums-outline" size={22} color={C.primary} />
-              </Pressable>
-            </Link>
-          ),
+          ...tab('Explore', 'compass'),
+          headerRight: () => <HeaderButton icon="albums-outline" label="Topics and search" onPress={() => router.push('/topics')} />,
         }}
       />
-      <Tabs.Screen name="exercise" options={{ title: 'Exercise', tabBarIcon: icon('school') }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: icon('person') }} />
+      <Tabs.Screen name="exercise" options={tab('Exercise', 'school')} />
+      <Tabs.Screen name="profile" options={tab('Profile', 'person')} />
     </Tabs>
   );
 }

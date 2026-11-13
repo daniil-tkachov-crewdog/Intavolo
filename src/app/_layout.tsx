@@ -1,20 +1,42 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts, Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold } from '@expo-google-fonts/onest';
 import { StoreProvider } from '../lib/store';
-import { C } from '../lib/theme';
+import { ThemeProvider, useTheme } from '../lib/theme';
+import { StackHeader } from '../components/Header';
 
 export default function RootLayout() {
+  const [loaded] = useFonts({ Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold });
+  if (!loaded) return null;
   return (
-    <StoreProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ contentStyle: { backgroundColor: C.bg }, headerTintColor: C.primary }}>
+    <ThemeProvider>
+      <StoreProvider>
+        <Screens />
+      </StoreProvider>
+    </ThemeProvider>
+  );
+}
+
+function Screens() {
+  const { c } = useTheme();
+  return (
+    <>
+      <StatusBar style={c.dark ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: c.bg },
+          header: ({ options, navigation, back }) => (
+            <StackHeader title={typeof options.title === 'string' ? options.title : ''} onBack={back ? navigation.goBack : undefined} />
+          ),
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="vocabulary" options={{ title: 'Vocabulary', headerBackTitle: 'Profile' }} />
-        <Stack.Screen name="topics" options={{ title: 'Topics', headerBackTitle: 'Explore' }} />
-        <Stack.Screen name="learn" options={{ title: 'Learn new words', headerBackTitle: 'Exercise' }} />
-        <Stack.Screen name="vocab-test" options={{ title: 'Test your vocabulary', headerBackTitle: 'Exercise' }} />
-        <Stack.Screen name="topic/[name]" options={{ title: '', headerBackTitle: 'Topics' }} />
+        <Stack.Screen name="vocabulary" options={{ title: 'Vocabulary' }} />
+        <Stack.Screen name="topics" options={{ title: 'Topics' }} />
+        <Stack.Screen name="learn" options={{ title: 'Learn new words' }} />
+        <Stack.Screen name="vocab-test" options={{ title: 'Test your vocabulary' }} />
+        <Stack.Screen name="topic/[name]" options={{ title: '' }} />
       </Stack>
-    </StoreProvider>
+    </>
   );
 }

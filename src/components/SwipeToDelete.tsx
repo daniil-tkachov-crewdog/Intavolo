@@ -1,12 +1,13 @@
 import { useRef, type ReactNode } from 'react';
 import { Animated, PanResponder, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { C } from '../lib/theme';
+import { useTheme } from '../lib/theme';
 
 const ACTION_W = 72;
 
 /** Swipe the row left to reveal a delete button on its right side. */
 export function SwipeToDelete({ children, onDelete }: { children: ReactNode; onDelete: () => void }) {
+  const { c } = useTheme();
   const x = useRef(new Animated.Value(0)).current;
   const base = useRef(0);
 
@@ -35,7 +36,7 @@ export function SwipeToDelete({ children, onDelete }: { children: ReactNode; onD
             snap(0);
             onDelete();
           }}
-          style={s.btn}
+          style={[s.btn, { backgroundColor: c.accent.red.fg }]}
           accessibilityRole="button"
           accessibilityLabel="Delete word"
           hitSlop={8}
@@ -53,5 +54,5 @@ export function SwipeToDelete({ children, onDelete }: { children: ReactNode; onD
 const s = StyleSheet.create({
   wrap: { justifyContent: 'center' },
   action: { position: 'absolute', right: 0, top: 0, bottom: 0, width: ACTION_W, alignItems: 'flex-end', justifyContent: 'center' },
-  btn: { width: ACTION_W - 12, top: 0, bottom: 0, position: 'absolute', backgroundColor: C.accent, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  btn: { width: ACTION_W - 12, top: 0, bottom: 0, position: 'absolute', borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

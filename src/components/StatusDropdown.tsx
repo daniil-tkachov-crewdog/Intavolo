@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
-import { C, STATUS_COLOR } from '../lib/theme';
+import { F, makeStyles, useTheme } from '../lib/theme';
 
 export function StatusDropdown({ onPick }: { onPick: (s: Status) => void }) {
+  const s = useStyles();
+  const { c } = useTheme();
   return (
     <View style={s.box}>
       <Text style={s.title}>How well do you know it?</Text>
@@ -11,9 +13,9 @@ export function StatusDropdown({ onPick }: { onPick: (s: Status) => void }) {
           <Pressable
             key={st}
             onPress={() => onPick(st)}
-            style={({ pressed }) => [s.chip, { borderColor: STATUS_COLOR[st] }, pressed && { backgroundColor: STATUS_COLOR[st] + '22' }]}
+            style={({ pressed }) => [s.chip, { backgroundColor: c.status[st].soft }, pressed && { opacity: 0.6 }]}
           >
-            <Text style={[s.chipText, { color: STATUS_COLOR[st] }]}>{STATUS_LABEL[st]}</Text>
+            <Text style={[s.chipText, { color: c.status[st].text }]}>{STATUS_LABEL[st]}</Text>
           </Pressable>
         ))}
       </View>
@@ -21,10 +23,10 @@ export function StatusDropdown({ onPick }: { onPick: (s: Status) => void }) {
   );
 }
 
-const s = StyleSheet.create({
-  box: { backgroundColor: C.card, borderRadius: 16, padding: 14, marginTop: 10, borderWidth: 1, borderColor: C.border },
-  title: { color: C.muted, fontSize: 14, marginBottom: 10 },
-  row: { flexDirection: 'row', gap: 8 },
-  chip: { flex: 1, borderWidth: 1.5, borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
-  chipText: { fontWeight: '600', fontSize: 13 },
-});
+const useStyles = makeStyles((c) => ({
+  box: { backgroundColor: c.card, borderRadius: 22, padding: 14, borderWidth: 1, borderColor: c.border },
+  title: { ...F.medium, color: c.muted, fontSize: 14, marginBottom: 10 },
+  row: { flexDirection: 'row', gap: 6 },
+  chip: { flex: 1, borderRadius: 14, paddingVertical: 11, alignItems: 'center' },
+  chipText: { ...F.semibold, fontSize: 13 },
+}));

@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useStore } from '../../lib/store';
 import { WORDS, isLevel } from '../../lib/vocab';
 import { BelowHeader } from '../../components/BelowHeader';
 import { WordRow } from '../../components/WordRow';
 import { Button } from '../../components/Button';
-import { C } from '../../lib/theme';
+import { F, makeStyles } from '../../lib/theme';
 
 export default function Topic() {
+  const s = useStyles();
   const { name } = useLocalSearchParams<{ name: string }>();
   const { progress, addWord, addWords } = useStore();
   const words = useMemo(() => WORDS.filter((w) => (isLevel(name) ? w.level === name : w.topic === name)), [name]);
@@ -35,7 +36,7 @@ export default function Topic() {
             </Text>
             {remaining.length > 0 && (
               <View style={{ flexDirection: 'row' }}>
-                <Button label={`Learn all (${remaining.length})`} onPress={learnAll} />
+                <Button label={`Learn all (${remaining.length})`} icon="add" onPress={learnAll} />
               </View>
             )}
           </View>
@@ -46,8 +47,8 @@ export default function Topic() {
   );
 }
 
-const s = StyleSheet.create({
-  list: { padding: 16, gap: 8 },
-  header: { gap: 10, marginBottom: 6 },
-  count: { color: C.muted, fontSize: 14 },
-});
+const useStyles = makeStyles((c) => ({
+  list: { padding: 16, paddingTop: 4, gap: 8 },
+  header: { gap: 12, marginBottom: 6 },
+  count: { ...F.regular, color: c.muted, fontSize: 14, marginHorizontal: 4 },
+}));
