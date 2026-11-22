@@ -19,6 +19,15 @@ const variants = (s: string) => {
   return bare === n ? [n] : [n, bare];
 };
 
+/** Strict version for grammar: no dropping of "a", "the"… (in Italian "a" is a real word). */
+export function checkExact(input: string, accepted: string[]): Check {
+  const typed = normalize(input);
+  const answers = accepted.map(normalize);
+  if (answers.includes(typed)) return 'correct';
+  if (answers.map(stripAccents).includes(stripAccents(typed))) return 'close';
+  return 'wrong';
+}
+
 /** correct = exact match (case/spacing/punctuation ignored); close = only accents differ. */
 export function checkAnswer(input: string, accepted: string[]): Check {
   const typed = variants(input);

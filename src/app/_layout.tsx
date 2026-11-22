@@ -42,6 +42,8 @@ function Screens() {
           <Stack.Screen name="topics" options={{ title: 'Topics' }} />
           <Stack.Screen name="learn" options={{ title: 'Learn new words' }} />
           <Stack.Screen name="vocab-test" options={{ title: 'Test your vocabulary' }} />
+          <Stack.Screen name="grammar" options={{ title: 'Grammar' }} />
+          <Stack.Screen name="grammar/[id]" options={{ title: '' }} />
           <Stack.Screen name="topic/[name]" options={{ title: '' }} />
           <Stack.Screen name="account" options={{ title: 'Account' }} />
         </Stack.Protected>

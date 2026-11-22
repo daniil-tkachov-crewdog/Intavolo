@@ -32,7 +32,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "node --test src/lib/*.test.ts",
-    "build-vocab": "node scripts/build-vocab/build.mjs"
+    "build-vocab": "node scripts/build-vocab/build.mjs",
+    "build-grammar": "node scripts/build-grammar/build.mjs"
   },
   "private": true
 }

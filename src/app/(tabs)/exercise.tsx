@@ -11,7 +11,7 @@ const ITEMS: Item[] = [
   { title: 'Test your vocabulary', icon: 'albums', accent: 'purple', href: '/vocab-test' },
   { title: 'Learn new words', icon: 'sparkles', accent: 'blue', href: '/learn' },
   { title: 'Sentences', icon: 'chatbubbles', accent: 'amber' },
-  { title: 'Grammar test', icon: 'book', accent: 'red' },
+  { title: 'Grammar', icon: 'book', accent: 'red', href: '/grammar' },
 ];
 
 export default function ExerciseMenu() {

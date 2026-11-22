@@ -42,3 +42,6 @@ yarn-error.*
 
 # raw vocabulary downloads (large)
 scripts/build-vocab/data/
+
+# Wiktionary responses cached by the grammar build
+scripts/build-grammar/.cache/
