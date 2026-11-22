@@ -9,7 +9,7 @@ import { F, makeStyles, useTheme } from '../lib/theme';
 
 const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 
-type Result = 'correct' | 'close' | 'wrong';
+type Result = 'correct' | 'close' | 'wrong' | 'shown';
 
 interface Props {
   ex: Ex;
@@ -110,7 +110,10 @@ function Fill({ ex, top, onNext }: Props & { ex: Extract<Ex, { type: 'fill' }> }
       why={ex.why}
       footer={
         result === null ? (
-          <Button label="Check" disabled={!text.trim()} onPress={check} />
+          <View style={s.row}>
+            <Button label="Show answer" variant="secondary" onPress={() => setResult('shown')} />
+            <Button label="Check" disabled={!text.trim()} onPress={check} />
+          </View>
         ) : (
           <Button label="Next" iconRight="arrow-forward" onPress={() => onNext(result === 'correct')} />
         )
@@ -145,7 +148,7 @@ function Order({ ex, top, onNext }: Props & { ex: Extract<Ex, { type: 'order' }>
           <Text style={s.question}>{ex.en}</Text>
           <View style={[s.line, s.chips]}>{chosen.map((i) => chip(i, () => setChosen((c) => c.filter((x) => x !== i))))}</View>
           <View style={s.chips}>{pool.map((i) => chip(i, () => setChosen((c) => [...c, i]), chosen.includes(i)))}</View>
-          {result === 'wrong' && <Text style={s.answer}>Answer: {ex.sentence}</Text>}
+          {(result === 'wrong' || result === 'shown') && <Text style={s.answer}>Answer: {ex.sentence}</Text>}
         </>
       }
       result={result}
@@ -155,7 +158,7 @@ function Order({ ex, top, onNext }: Props & { ex: Extract<Ex, { type: 'order' }>
           <Button label="Next" iconRight="arrow-forward" onPress={() => onNext(result === 'correct')} />
         ) : (
           <View style={s.row}>
-            <Button label="Clear" variant="secondary" disabled={!chosen.length} onPress={() => setChosen([])} />
+            <Button label="Show answer" variant="secondary" onPress={() => setResult('shown')} />
             <Button label="Check" disabled={chosen.length !== words.length} onPress={check} />
           </View>
         )
@@ -168,6 +171,7 @@ const MESSAGES: Record<Result, [string, 'green' | 'amber' | 'red', keyof typeof 
   correct: ['Correct!', 'green', 'sparkles'],
   close: ['Almost — check the accents.', 'amber', 'alert-circle'],
   wrong: ['Not quite.', 'red', 'close-circle'],
+  shown: ['Answer shown. Not counted.', 'amber', 'eye'],
 };
 
 /** Card, feedback with the rule, buttons pinned at the bottom. */
