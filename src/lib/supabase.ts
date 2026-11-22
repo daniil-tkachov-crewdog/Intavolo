@@ -8,7 +8,6 @@ export const supabase = createClient(process.env.EXPO_PUBLIC_SUPABASE_URL!, proc
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    flowType: 'pkce', // Google OAuth returns ?code= to the app
   },
 });
 

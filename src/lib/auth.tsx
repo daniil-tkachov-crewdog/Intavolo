@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInEmail: async (email, password) => check(await supabase.auth.signInWithPassword({ email, password })),
       signUpEmail: async (email, password) => check(await supabase.auth.signUp({ email, password })),
       signInGoogle: async () => {
-        // Browser OAuth via Supabase (PKCE): only a Google Web client is needed.
+        // Browser OAuth via Supabase (implicit flow, as in Supabase's Expo guide): only a Google Web client is needed.
         // Fixed app-scheme URL (Expo Go's exp://… URL changes per network and isn't allow-listed).
         // iOS's auth session captures this scheme itself, so it works in Expo Go too.
         const redirectTo = 'intavolo://auth';
@@ -68,16 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (res.type !== 'success') throw new Cancelled();
-        // Plain string parsing: RN's URL parser is unreliable for custom-scheme URLs.
+        // Tokens come back in the URL (#access_token=…&refresh_token=…). Plain string parsing on purpose.
         const param = (k: string) => {
           const m = res.url.match(new RegExp(`[?&#]${k}=([^&#]*)`));
           return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
         };
         const err = param('error_description');
         if (err) throw new Error(err);
-        const code = param('code');
-        if (!code) throw new Error('Google sign-in did not complete.');
-        check(await supabase.auth.exchangeCodeForSession(code));
+        const access_token = param('access_token');
+        const refresh_token = param('refresh_token');
+        if (!access_token || !refresh_token) throw new Error('Google sign-in did not complete.');
+        check(await supabase.auth.setSession({ access_token, refresh_token }));
       },
       signInApple: async () => {
         let cred: AppleAuthentication.AppleAuthenticationCredential;
