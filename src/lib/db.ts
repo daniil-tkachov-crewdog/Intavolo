@@ -23,6 +23,13 @@ db.execSync(`
     key TEXT PRIMARY KEY NOT NULL,
     value TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS activity (
+    day TEXT PRIMARY KEY NOT NULL,
+    exercises INTEGER NOT NULL DEFAULT 0,
+    goal INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL DEFAULT 0,
+    dirty INTEGER NOT NULL DEFAULT 0
+  );
 `);
 
 // Sync columns: updated_at (ms), dirty (needs push), deleted (tombstone, so deletions sync too).
@@ -128,10 +135,50 @@ export function applyRemote(rows: SyncRow[]) {
 
 /** Remove all learning data from the phone (sign out, account switch, delete account). */
 export function wipeProgress() {
-  db.execSync('DELETE FROM progress; DELETE FROM skipped;');
-  db.runSync("DELETE FROM settings WHERE key IN ('syncUser', 'syncCursor', 'lastSyncedAt')");
+  db.execSync('DELETE FROM progress; DELETE FROM skipped; DELETE FROM activity;');
+  db.runSync("DELETE FROM settings WHERE key IN ('syncUser', 'syncCursor', 'activityCursor', 'lastSyncedAt', 'dailyGoal')");
 }
 
 export function deleteSetting(key: string) {
   db.runSync('DELETE FROM settings WHERE key = ?', key);
+}
+
+// ---- Daily activity (streaks) ----
+
+export interface ActivityRow {
+  day: string;
+  exercises: number;
+  goal: number;
+  updated_at: number;
+}
+
+export const loadActivity = () => db.getAllSync<ActivityRow>('SELECT day, exercises, goal, updated_at FROM activity');
+
+export function saveActivity(day: string, exercises: number, goal: number) {
+  db.runSync('INSERT OR REPLACE INTO activity (day, exercises, goal, updated_at, dirty) VALUES (?, ?, ?, ?, 1)', day, exercises, goal, Date.now());
+}
+
+export const dirtyActivity = () => db.getAllSync<ActivityRow>('SELECT day, exercises, goal, updated_at FROM activity WHERE dirty = 1');
+
+export function markActivityClean(rows: ActivityRow[]) {
+  db.withTransactionSync(() => {
+    for (const r of rows) db.runSync('UPDATE activity SET dirty = 0 WHERE day = ? AND updated_at = ?', r.day, r.updated_at);
+  });
+}
+
+/** Merge server rows: exercise counts only grow, so keep the larger one; unpushed local goal wins. */
+export function applyRemoteActivity(rows: ActivityRow[]) {
+  db.withTransactionSync(() => {
+    for (const r of rows) {
+      const local = db.getFirstSync<ActivityRow & { dirty: number }>('SELECT * FROM activity WHERE day = ?', r.day);
+      if (!local) {
+        db.runSync('INSERT INTO activity (day, exercises, goal, updated_at, dirty) VALUES (?, ?, ?, ?, 0)', r.day, r.exercises, r.goal, r.updated_at);
+        continue;
+      }
+      const exercises = Math.max(local.exercises, r.exercises);
+      const goal = local.dirty ? local.goal : r.goal;
+      const dirty = local.dirty || exercises !== r.exercises || goal !== r.goal ? 1 : 0;
+      db.runSync('UPDATE activity SET exercises = ?, goal = ?, dirty = ? WHERE day = ?', exercises, goal, dirty, r.day);
+    }
+  });
 }

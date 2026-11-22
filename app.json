@@ -29,7 +29,8 @@
       "expo-router",
       "expo-sqlite",
       "expo-apple-authentication",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications"
     ]
   }
 }

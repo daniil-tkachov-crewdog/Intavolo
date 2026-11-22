@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } fr
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useStore } from '../lib/store';
+import { useActivity } from '../lib/activity';
 import { WORDS, WORD_BY_ID, englishOf, type Word } from '../lib/vocab';
 import { checkAnswer } from '../lib/answer';
 import { BelowHeader } from '../components/BelowHeader';
@@ -52,6 +53,7 @@ export default function Learn() {
 function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
   const s = useStyles();
   const { c } = useTheme();
+  const { record } = useActivity();
   const [step, setStep] = useState(0);
   const next = () => setStep((n) => n + 1);
 
@@ -79,7 +81,15 @@ function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
         </View>
         {step === 0 && <Meet words={words} onDone={next} />}
         {step === 1 && <Queue words={words} onDone={next} render={(w, done) => <Recognize word={w} words={words} onDone={done} />} />}
-        {step === 2 && <Match words={words} onDone={next} />}
+        {step === 2 && (
+          <Match
+            words={words}
+            onDone={() => {
+              record(words.length);
+              next();
+            }}
+          />
+        )}
         {step === 3 && <Queue words={words} onDone={next} render={(w, done) => <Recall word={w} onDone={done} />} />}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -90,8 +100,10 @@ function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
 function Queue({ words, onDone, render }: { words: Word[]; onDone: () => void; render: (w: Word, done: (ok: boolean) => void) => React.ReactNode }) {
   const [queue, setQueue] = useState(() => shuffle(words));
   const [n, setN] = useState(0);
+  const { record } = useActivity();
   const w = queue[0];
   const done = (ok: boolean) => {
+    record();
     const rest = queue.slice(1);
     const q = ok ? rest : [...rest, w];
     setN((x) => x + 1);

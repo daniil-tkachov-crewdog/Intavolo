@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useStore } from '../lib/store';
+import { useActivity } from '../lib/activity';
 import { WORD_BY_ID } from '../lib/vocab';
 import { dueAt, isDue, GOALS, STATUS_LABEL, type Outcome } from '../lib/engine';
 import { Exercise } from '../components/Exercise';
@@ -23,6 +24,7 @@ export default function VocabTest() {
 function Session() {
   const s = useStyles();
   const { progress, answer } = useStore();
+  const { record } = useActivity();
   const [queue, setQueue] = useState<number[]>([]);
   const [i, setI] = useState(0);
   const latest = useRef(progress);
@@ -61,6 +63,7 @@ function Session() {
 
   const onAnswered = (o: Outcome) => {
     answer(word.id, o);
+    record();
     setI((n) => n + 1);
   };
 

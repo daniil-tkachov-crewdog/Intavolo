@@ -46,6 +46,36 @@ async function push(uid: string) {
   }
 }
 
+async function pushActivity(uid: string) {
+  const rows = db.dirtyActivity();
+  if (!rows.length) return;
+  const { error } = await supabase.from('daily_activity').upsert(rows.map((r) => ({ ...r, user_id: uid })), { onConflict: 'user_id,day' });
+  if (error) throw error;
+  db.markActivityClean(rows);
+}
+
+async function pullActivity() {
+  let cursor = db.getSetting('activityCursor') ?? '1970-01-01T00:00:00Z';
+  let changed = false;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('daily_activity')
+      .select('day, exercises, goal, updated_at, synced_at')
+      .gt('synced_at', cursor)
+      .order('synced_at')
+      .limit(1000);
+    if (error) throw error;
+    const rows = (data ?? []) as (db.ActivityRow & { synced_at: string })[];
+    if (!rows.length) break;
+    db.applyRemoteActivity(rows);
+    changed = true;
+    cursor = rows[rows.length - 1].synced_at;
+    db.setSetting('activityCursor', cursor);
+    if (rows.length < 1000) break;
+  }
+  return changed;
+}
+
 async function pull() {
   let cursor = db.getSetting('syncCursor') ?? '1970-01-01T00:00:00Z';
   let changed = false;
@@ -73,6 +103,8 @@ export function syncNow(): Promise<boolean> {
     try {
       await push(uid);
       await pull();
+      await pushActivity(uid);
+      if (await pullActivity()) emitDataChanged();
       const now = Date.now();
       db.setSetting('lastSyncedAt', String(now));
       set({ syncing: false, lastSyncedAt: now, error: null });

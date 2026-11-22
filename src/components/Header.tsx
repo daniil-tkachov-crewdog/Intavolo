@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { F, makeStyles, useTheme } from '../lib/theme';
+import { StreakBadge } from './StreakBadge';
 
 /** Large left-aligned title used on the tab screens. */
 export function TabHeader({ title, right }: { title: string; right?: ReactNode }) {
@@ -11,7 +12,10 @@ export function TabHeader({ title, right }: { title: string; right?: ReactNode }
   return (
     <View style={[s.tab, { paddingTop: top + 8 }]}>
       <Text style={s.tabTitle}>{title}</Text>
-      {right}
+      <View style={s.actions}>
+        <StreakBadge />
+        {right}
+      </View>
     </View>
   );
 }
@@ -48,6 +52,7 @@ export function HeaderButton({ icon, onPress, label }: { icon: keyof typeof Ioni
 
 const useStyles = makeStyles((c) => ({
   tab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, backgroundColor: c.bg },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tabTitle: { ...F.bold, fontSize: 32, letterSpacing: -0.64, color: c.text },
   stack: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: c.bg },
   stackTitle: { ...F.bold, flex: 1, fontSize: 28, letterSpacing: -0.5, color: c.text },

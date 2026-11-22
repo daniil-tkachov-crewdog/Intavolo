@@ -9,6 +9,7 @@ import { GrammarExercise } from '../../components/GrammarExercise';
 import { Rich } from '../../components/Rich';
 import { SpeakButton } from '../../components/WordCard';
 import { LESSON_BY_ID, PASS, saveScore, type Block, type Lesson } from '../../lib/grammar';
+import { useActivity } from '../../lib/activity';
 import { F, makeStyles, useTheme } from '../../lib/theme';
 
 type Phase = 'learn' | 'practice' | 'result';
@@ -137,8 +138,10 @@ function Practice({ lesson, onDone }: { lesson: Lesson; onDone: (correct: number
   const s = useStyles();
   const [i, setI] = useState(0);
   const [correct, setCorrect] = useState(0);
+  const { record } = useActivity();
   const total = lesson.exercises.length;
   const next = (ok: boolean) => {
+    record();
     const n = correct + (ok ? 1 : 0);
     setCorrect(n);
     if (i + 1 >= total) onDone(n);
