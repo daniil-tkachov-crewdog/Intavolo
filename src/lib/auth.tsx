@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUpEmail: async (email, password) => check(await supabase.auth.signUp({ email, password })),
       signInGoogle: async () => {
         // Browser OAuth via Supabase (PKCE): only a Google Web client is needed.
-        const redirectTo = Linking.createURL('auth');
+        // Fixed app-scheme URL (not Linking.createURL, which is exp://… in Expo Go and not allow-listed).
+        // iOS's auth session captures this scheme itself, so it works in Expo Go too.
+        const redirectTo = 'intavolo://auth';
         const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } });
         if (error) throw error;
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
