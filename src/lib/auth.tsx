@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session } from '@supabase/supabase-js';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import { supabase } from './supabase';
 import { hasUnsynced, startSync, stopSync, syncNow } from './sync';
 
@@ -62,17 +61,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUpEmail: async (email, password) => check(await supabase.auth.signUp({ email, password })),
       signInGoogle: async () => {
         // Browser OAuth via Supabase (PKCE): only a Google Web client is needed.
-        // Fixed app-scheme URL (not Linking.createURL, which is exp://… in Expo Go and not allow-listed).
+        // Fixed app-scheme URL (Expo Go's exp://… URL changes per network and isn't allow-listed).
         // iOS's auth session captures this scheme itself, so it works in Expo Go too.
         const redirectTo = 'intavolo://auth';
         const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } });
         if (error) throw error;
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (res.type !== 'success') throw new Cancelled();
-        const { queryParams } = Linking.parse(res.url);
-        if (queryParams?.error_description) throw new Error(String(queryParams.error_description));
-        if (typeof queryParams?.code !== 'string') throw new Error('Google sign-in did not complete.');
-        check(await supabase.auth.exchangeCodeForSession(queryParams.code));
+        // Plain string parsing: RN's URL parser is unreliable for custom-scheme URLs.
+        const param = (k: string) => {
+          const m = res.url.match(new RegExp(`[?&#]${k}=([^&#]*)`));
+          return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+        };
+        const err = param('error_description');
+        if (err) throw new Error(err);
+        const code = param('code');
+        if (!code) throw new Error('Google sign-in did not complete.');
+        check(await supabase.auth.exchangeCodeForSession(code));
       },
       signInApple: async () => {
         let cred: AppleAuthentication.AppleAuthenticationCredential;
