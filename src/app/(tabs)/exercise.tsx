@@ -10,7 +10,7 @@ type Item = { title: string; icon: ComponentProps<typeof Ionicons>['name']; acce
 const ITEMS: Item[] = [
   { title: 'Test your vocabulary', icon: 'albums', accent: 'purple', href: '/vocab-test' },
   { title: 'Learn new words', icon: 'sparkles', accent: 'blue', href: '/learn' },
-  { title: 'Sentences', icon: 'chatbubbles', accent: 'amber' },
+  { title: 'Sentences', icon: 'chatbubbles', accent: 'amber', href: '/sentences' },
   { title: 'Grammar', icon: 'book', accent: 'red', href: '/grammar' },
 ];
 

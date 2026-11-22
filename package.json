@@ -33,7 +33,8 @@
     "web": "expo start --web",
     "test": "node --test src/lib/*.test.ts",
     "build-vocab": "node scripts/build-vocab/build.mjs",
-    "build-grammar": "node scripts/build-grammar/build.mjs"
+    "build-grammar": "node scripts/build-grammar/build.mjs",
+    "build-sentences": "node --max-old-space-size=6000 scripts/build-sentences/build.mjs"
   },
   "private": true
 }
