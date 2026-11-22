@@ -29,18 +29,19 @@ export default function RootLayout() {
 function Screens() {
   const { c } = useTheme();
   const { session, ready } = useAuth();
-  if (!ready) return null;
   const signedIn = !!session;
   const tapped = Notifications.useLastNotificationResponse();
 
   // Reminder tapped → straight to practice.
   useEffect(() => {
     const url = tapped?.notification.request.content.data?.url;
-    if (signedIn && typeof url === 'string') {
+    if (ready && signedIn && typeof url === 'string') {
       router.navigate(url as Href);
       Notifications.clearLastNotificationResponse();
     }
-  }, [tapped, signedIn]);
+  }, [tapped, ready, signedIn]);
+
+  if (!ready) return null;
 
   return (
     <>
