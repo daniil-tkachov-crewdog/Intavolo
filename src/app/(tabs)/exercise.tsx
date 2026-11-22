@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, useWindowDimensions } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { IconTile } from '../../components/IconTile';
@@ -16,6 +16,9 @@ const ITEMS: Item[] = [
 
 export default function ExerciseMenu() {
   const s = useStyles();
+  // Fixed square size so all 4 tiles match regardless of title length.
+  const { width } = useWindowDimensions();
+  const size = Math.floor((Math.min(width, 520) - 16 * 2 - 12) / 2);
   return (
     <ScrollView contentContainerStyle={s.grid}>
       {ITEMS.map(({ title, icon, accent, href }) => {
@@ -27,7 +30,7 @@ export default function ExerciseMenu() {
             onPress={() => href && router.push(href)}
             accessibilityRole="button"
             accessibilityState={{ disabled: soon }}
-            style={({ pressed }) => [s.tile, pressed && { opacity: 0.7 }]}
+            style={({ pressed }) => [s.tile, { width: size, height: size }, pressed && { opacity: 0.7 }]}
           >
             <IconTile icon={icon} accent={accent} size={48} />
             <Text style={s.title}>{title}</Text>
@@ -40,8 +43,8 @@ export default function ExerciseMenu() {
 }
 
 const useStyles = makeStyles((c) => ({
-  grid: { flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', alignContent: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 24 },
-  tile: { flexBasis: '45%', flexGrow: 1, minHeight: 150, backgroundColor: c.card, borderRadius: 24, borderWidth: 1, borderColor: c.border, padding: 18, gap: 14 },
+  grid: { flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 24 },
+  tile: { backgroundColor: c.card, borderRadius: 24, borderWidth: 1, borderColor: c.border, padding: 18, gap: 14 },
   title: { ...F.semibold, fontSize: 17, color: c.text },
   badge: { ...F.semibold, fontSize: 12, color: c.accent.amber.text, backgroundColor: c.accent.amber.soft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start', overflow: 'hidden' },
 }));
