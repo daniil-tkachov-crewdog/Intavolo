@@ -1,9 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
 import { supabase } from './supabase';
 import { hasUnsynced, startSync, stopSync, syncNow } from './sync';
+
+const GOOGLE_IOS_CLIENT_ID = '907309564443-n1fp9jvrm35ub49jqm6tmr5ja8poebgn.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '907309564443-ga3u8ll3pli9vq0l69aeq02883ukrm18.apps.googleusercontent.com';
 
 export type Provider = 'email' | 'google' | 'apple';
 
@@ -60,7 +65,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInEmail: async (email, password) => check(await supabase.auth.signInWithPassword({ email, password })),
       signUpEmail: async (email, password) => check(await supabase.auth.signUp({ email, password })),
       signInGoogle: async () => {
-        // Browser OAuth via Supabase (implicit flow, as in Supabase's Expo guide): only a Google Web client is needed.
+        if (Platform.OS === 'ios') {
+          // Native Google sheet → ID token → Supabase. No browser, so the Supabase domain never shows.
+          GoogleSignin.configure({ iosClientId: GOOGLE_IOS_CLIENT_ID, webClientId: GOOGLE_WEB_CLIENT_ID });
+          let res;
+          try {
+            res = await GoogleSignin.signIn();
+          } catch (e) {
+            if (isErrorWithCode(e) && (e.code === statusCodes.SIGN_IN_CANCELLED || e.code === statusCodes.IN_PROGRESS)) throw new Cancelled();
+            throw e;
+          }
+          if (!isSuccessResponse(res)) throw new Cancelled();
+          const token = res.data.idToken;
+          if (!token) throw new Error('Google did not return an ID token.');
+          check(await supabase.auth.signInWithIdToken({ provider: 'google', token }));
+          return;
+        }
+        // Android: browser OAuth via Supabase (implicit flow, as in Supabase's Expo guide): only a Google Web client is needed.
         // Fixed app-scheme URL (Expo Go's exp://… URL changes per network and isn't allow-listed).
         // iOS's auth session captures this scheme itself, so it works in Expo Go too.
         const redirectTo = 'intavolo://auth';

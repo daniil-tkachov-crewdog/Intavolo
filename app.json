@@ -30,7 +30,13 @@
       "expo-sqlite",
       "expo-apple-authentication",
       "expo-web-browser",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.907309564443-n1fp9jvrm35ub49jqm6tmr5ja8poebgn"
+        }
+      ]
     ]
   }
 }
