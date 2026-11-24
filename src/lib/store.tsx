@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as Speech from 'expo-speech';
+import { setAudioModeAsync } from 'expo-audio';
 import * as db from './db';
 import { onDataChanged, scheduleSync } from './sync';
 import { applyAnswer, createProgress, type AnswerResult, type Outcome, type Progress, type Status } from './engine';
@@ -26,6 +27,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState(() => new Map(db.loadProgress().map((p) => [p.wordId, p])));
   const [skipped, setSkipped] = useState(() => db.loadSkipped());
   const [speechRate, setRate] = useState<SpeechRate>(() => (db.getSetting('speechRate') as SpeechRate) || 'Normal');
+
+  // iOS mutes TTS on the silent switch unless the audio session is set to playback.
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'duckOthers' }).catch(() => {});
+  }, []);
 
   // Reload after a sync pull or a wipe changed the DB underneath us.
   useEffect(
