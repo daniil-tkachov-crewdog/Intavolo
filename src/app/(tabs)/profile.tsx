@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { SCALE, Text } from '../../components/Text';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../../lib/auth';
 import { useStore, SPEECH_RATES, type SpeechRate } from '../../lib/store';
 import { STATUSES, STATUS_LABEL } from '../../lib/engine';
@@ -15,6 +16,13 @@ const APPEARANCE: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.
   { mode: 'light', label: 'Light', icon: 'sunny' },
   { mode: 'dark', label: 'Dark', icon: 'moon' },
   { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
+];
+
+const LEGAL_BASE = 'https://legal.intavolo-app.workers.dev';
+const LEGAL = [
+  { label: 'Privacy Policy', url: `${LEGAL_BASE}/privacy.html` },
+  { label: 'Terms of Use', url: `${LEGAL_BASE}/terms.html` },
+  { label: 'Support', url: `${LEGAL_BASE}/support.html` },
 ];
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -107,11 +115,15 @@ export default function Profile() {
             <View style={s.sep} />
           </>
         )}
-        <View style={s.item}>
-          <Text style={s.itemText}>Payment</Text>
-          <Text style={s.soon}>Coming soon</Text>
-        </View>
-        <View style={s.sep} />
+        {LEGAL.map((l) => (
+          <View key={l.url}>
+            <Pressable onPress={() => WebBrowser.openBrowserAsync(l.url)} style={({ pressed }) => [s.item, pressed && { opacity: 0.7 }]}>
+              <Text style={s.itemText}>{l.label}</Text>
+              <Ionicons name="open-outline" size={16} color={c.muted} />
+            </Pressable>
+            <View style={s.sep} />
+          </View>
+        ))}
         <View style={s.credits}>
           <Text style={s.creditsTitle}>Credits</Text>
           <Text style={s.small}>
@@ -158,7 +170,6 @@ const useStyles = makeStyles((c) => ({
   list: { paddingVertical: 4 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 16 },
   itemText: { ...F.regular, flex: 1, fontSize: 16, color: c.text },
-  soon: { ...F.regular, fontSize: 13, color: c.muted },
   sep: { height: 1, backgroundColor: c.border, marginLeft: 16 },
   creditsTitle: { ...F.regular, fontSize: 16, color: c.text },
   credits: { paddingVertical: 10, paddingHorizontal: 16, gap: 4 },

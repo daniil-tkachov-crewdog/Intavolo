@@ -20,6 +20,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [appleOk, setAppleOk] = useState(false);
   const [kb, setKb] = useState(false);
   const { height } = useWindowDimensions();
@@ -42,6 +43,7 @@ export default function Login() {
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
       await fn();
     } catch (e) {
@@ -55,7 +57,10 @@ export default function Login() {
     const e = email.trim();
     if (!/^\S+@\S+\.\S+$/.test(e)) return setError('Enter a valid email.');
     if (password.length < 6) return setError('Password must be at least 6 characters.');
-    run(() => (mode === 'login' ? signInEmail(e, password) : signUpEmail(e, password)));
+    run(async () => {
+      if (mode === 'login') return signInEmail(e, password);
+      if (await signUpEmail(e, password)) setInfo(`Check ${e} to confirm your account, then log in.`);
+    });
   };
 
   const signup = mode === 'signup';
@@ -113,6 +118,7 @@ export default function Login() {
             returnKeyType="go"
           />
           {error && <Text style={s.error}>{error}</Text>}
+          {info && <Text style={s.info}>{info}</Text>}
           <View style={s.row}>
             <Button label={signup ? 'Create account' : 'Log in'} onPress={submit} disabled={busy} />
           </View>
@@ -151,6 +157,7 @@ const useStyles = makeStyles((c) => ({
   line: { flex: 1, height: 1, backgroundColor: c.border },
   or: { ...F.regular, fontSize: 13, color: c.muted },
   error: { ...F.regular, fontSize: 14, color: c.accent.red.text },
+  info: { ...F.regular, fontSize: 14, color: c.accent.green.text },
   switch: { alignSelf: 'center', paddingVertical: 4 },
   switchText: { ...F.regular, fontSize: 15, color: c.muted },
   switchLink: { ...F.semibold, fontSize: 15, color: c.primary },

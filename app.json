@@ -9,7 +9,10 @@
     "ios": {
       "supportsTablet": false,
       "usesAppleSignIn": true,
-      "bundleIdentifier": "com.intavolo.app"
+      "bundleIdentifier": "com.intavolo.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.intavolo.app",

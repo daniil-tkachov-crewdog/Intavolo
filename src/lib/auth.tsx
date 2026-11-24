@@ -21,7 +21,8 @@ interface Auth {
   continueAsGuest: () => void;
   provider: Provider;
   signInEmail: (email: string, password: string) => Promise<void>;
-  signUpEmail: (email: string, password: string) => Promise<void>;
+  /** Returns true when the account still needs email confirmation (no session yet). */
+  signUpEmail: (email: string, password: string) => Promise<boolean>;
   signInGoogle: () => Promise<void>;
   signInApple: () => Promise<void>;
   changePassword: (password: string) => Promise<void>;
@@ -77,7 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       provider: (session?.user.app_metadata.provider as Provider) ?? 'email',
       signInEmail: async (email, password) => check(await supabase.auth.signInWithPassword({ email, password })),
-      signUpEmail: async (email, password) => check(await supabase.auth.signUp({ email, password })),
+      signUpEmail: async (email, password) => {
+        const res = await supabase.auth.signUp({ email, password });
+        check(res);
+        return !res.data.session;
+      },
       signInGoogle: async () => {
         if (Platform.OS === 'ios') {
           // Native Google sheet → ID token → Supabase. No browser, so the Supabase domain never shows.
