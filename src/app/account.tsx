@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, type Provider } from '../lib/auth';
+import { Cancelled, useAuth, type Provider } from '../lib/auth';
 import { syncNow, useSyncStatus } from '../lib/sync';
 import { Button } from '../components/Button';
 import { Field } from '../components/Field';
@@ -72,6 +72,7 @@ export default function Account() {
             await deleteAccount();
           } catch (e) {
             setBusy(false);
+            if (e instanceof Cancelled) return;
             Alert.alert('Could not delete account', e instanceof Error ? e.message : 'Check your connection and try again.');
           }
         },

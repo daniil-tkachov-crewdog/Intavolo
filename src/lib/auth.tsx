@@ -122,7 +122,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true;
       },
       deleteAccount: async () => {
-        check(await supabase.rpc('delete_account'));
+        // Apple users confirm with Apple once more; the fresh code lets the server revoke the app's access to their Apple ID.
+        let appleAuthorizationCode: string | undefined;
+        const providers: (string | undefined)[] = session?.user.app_metadata.providers ?? [session?.user.app_metadata.provider];
+        if (providers.includes('apple')) {
+          try {
+            const cred = await AppleAuthentication.signInAsync();
+            appleAuthorizationCode = cred.authorizationCode ?? undefined;
+          } catch (e) {
+            if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') throw new Cancelled();
+            throw e;
+          }
+          if (!appleAuthorizationCode) throw new Error('Apple did not confirm. Please try again.');
+        }
+        const { error } = await supabase.functions.invoke('delete-account', { body: { appleAuthorizationCode } });
+        if (error) throw new Error('Could not delete account. Check your connection and try again.');
         await localSignOut();
       },
     };
