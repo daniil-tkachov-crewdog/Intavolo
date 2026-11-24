@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { SCALE, Text } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import type { Word } from '../lib/vocab';
 import { useStore } from '../lib/store';
@@ -53,13 +54,17 @@ export function WordCard({ word }: { word: Word }) {
       )}
       <View style={s.row}>
         <View style={{ flexShrink: 1 }}>
-          <Text style={s.it}>{word.it}</Text>
+          <Text style={s.it} maxFontSizeMultiplier={SCALE.display}>
+            {word.it}
+          </Text>
           {!!word.ipa && <Text style={s.ipa}>{word.ipa}</Text>}
         </View>
         <SpeakButton text={word.it} size={26} look="solid" />
       </View>
       <View style={s.divider} />
-      <Text style={s.en}>{word.en}</Text>
+      <Text style={s.en} maxFontSizeMultiplier={SCALE.title}>
+        {word.en}
+      </Text>
       {word.alt.length > 0 && <Text style={s.alt}>also: {word.alt.join(', ')}</Text>}
 
       {word.examples.length > 0 && (

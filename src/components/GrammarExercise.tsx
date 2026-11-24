@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text, TextInput } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { checkExact, normalize } from '../lib/answer';
 import type { GrammarExercise as Ex } from '../lib/grammar';

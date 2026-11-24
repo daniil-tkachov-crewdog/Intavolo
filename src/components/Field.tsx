@@ -1,4 +1,5 @@
-import { TextInput, View, type TextInputProps } from 'react-native';
+import { View, type TextInputProps } from 'react-native';
+import { TextInput } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { F, makeStyles, useTheme } from '../lib/theme';
 
@@ -15,6 +16,6 @@ export function Field({ icon, ...props }: TextInputProps & { icon: keyof typeof 
 }
 
 const useStyles = makeStyles((c) => ({
-  box: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 54, paddingHorizontal: 16, backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: c.border },
+  box: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 54, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: c.card, borderRadius: 18, borderWidth: 1, borderColor: c.border },
   input: { ...F.regular, flex: 1, fontSize: 16, color: c.text, paddingVertical: 0 },
 }));

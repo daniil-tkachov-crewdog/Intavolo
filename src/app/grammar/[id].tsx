@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { SCALE, Text } from '../../components/Text';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
-import { BelowHeader } from '../../components/BelowHeader';
+import { BelowHeader, KeyboardAvoid } from '../../components/BelowHeader';
 import { Button } from '../../components/Button';
 import { GrammarExercise } from '../../components/GrammarExercise';
 import { Rich } from '../../components/Rich';
@@ -158,11 +159,11 @@ function Practice({ lesson, onDone }: { lesson: Lesson; onDone: (correct: number
     </View>
   );
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} keyboardVerticalOffset={100}>
+    <KeyboardAvoid>
       <ScrollView contentContainerStyle={s.practice} keyboardShouldPersistTaps="handled">
         <GrammarExercise key={i} ex={lesson.exercises[i]} top={top} onNext={next} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoid>
   );
 }
 
@@ -173,7 +174,7 @@ function Result({ lesson, score, onReview, onRetry }: { lesson: Lesson; score: n
   return (
     <View style={s.center}>
       <Text style={s.big}>{passed ? '🎉' : '💪'}</Text>
-      <Text style={s.h1}>
+      <Text style={s.h1} maxFontSizeMultiplier={SCALE.title}>
         {score} / {total} correct
       </Text>
       <Text style={s.resultText}>{passed ? 'Lesson done!' : `You need ${Math.ceil(total * PASS)} to complete the lesson.`}</Text>

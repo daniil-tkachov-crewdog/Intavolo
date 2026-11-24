@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '../components/Text';
 import { useFocusEffect } from 'expo-router';
 import { useStore } from '../lib/store';
 import { useActivity } from '../lib/activity';
@@ -7,7 +8,7 @@ import { WORD_BY_ID } from '../lib/vocab';
 import { dueAt, isDue, GOALS, STATUS_LABEL, type Outcome } from '../lib/engine';
 import { Exercise } from '../components/Exercise';
 import { Button } from '../components/Button';
-import { BelowHeader } from '../components/BelowHeader';
+import { BelowHeader, KeyboardAvoid } from '../components/BelowHeader';
 import { StatusPill } from '../components/StatusPill';
 import { F, makeStyles } from '../lib/theme';
 
@@ -78,11 +79,11 @@ function Session() {
   );
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} keyboardVerticalOffset={100}>
+    <KeyboardAvoid>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
         <Exercise key={`${word.id}-${i}`} word={word} status={p.status} top={top} onAnswered={onAnswered} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoid>
   );
 }
 

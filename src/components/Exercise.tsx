@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { SCALE, Text, TextInput } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { checkAnswer } from '../lib/answer';
 import type { Outcome, Status } from '../lib/engine';
@@ -142,7 +143,9 @@ function Prompt({ big, sub, speak }: { big: string; sub?: string; speak?: string
   return (
     <View style={s.prompt}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Text style={s.big}>{big}</Text>
+        <Text style={s.big} maxFontSizeMultiplier={SCALE.display}>
+          {big}
+        </Text>
         {speak && <SpeakButton text={speak} size={20} look="soft" />}
       </View>
       {!!sub && <Text style={s.sub}>{sub}</Text>}
@@ -175,10 +178,10 @@ const useStyles = makeStyles((c) => ({
   prompt: { alignItems: 'center', gap: 4, paddingTop: 18, paddingBottom: 6 },
   big: { ...F.bold, fontSize: 38, letterSpacing: -0.76, color: c.text, textAlign: 'center', flexShrink: 1 },
   sub: { ...F.regular, fontSize: 17, color: c.muted },
-  option: { height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 44 },
+  option: { minHeight: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 44, paddingVertical: 12 },
   optionText: { ...F.regular, fontSize: 17, color: c.text, textAlign: 'center' },
   optionOn: { ...F.semibold, color: '#FFFFFF' },
-  optionIcon: { position: 'absolute', right: 16 },
+  optionIcon: { position: 'absolute', right: 16, top: '50%', marginTop: -10 },
   input: { ...F.regular, borderWidth: 1.5, borderColor: c.border, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, fontSize: 20, color: c.text, backgroundColor: c.surface },
   answer: { ...F.medium, fontSize: 16, color: c.text, textAlign: 'center' },
   banner: { borderRadius: 20, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },

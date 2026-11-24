@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { SCALE, Text } from '../components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -20,6 +21,19 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appleOk, setAppleOk] = useState(false);
+  const [kb, setKb] = useState(false);
+  const { height } = useWindowDimensions();
+
+  // Less space above the title on short screens (SE) and while the keyboard is up.
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', () => setKb(true));
+    const hide = Keyboard.addListener('keyboardWillHide', () => setKb(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  const topGap = kb ? 16 : height < 700 ? 32 : 64;
 
   useEffect(() => {
     if (Platform.OS === 'ios') AppleAuthentication.isAvailableAsync().then(setAppleOk);
@@ -50,9 +64,11 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={[s.wrap, { paddingTop: top + 64, paddingBottom: bottom + 24 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.wrap, { paddingTop: top + topGap, paddingBottom: bottom + 24 }]} keyboardShouldPersistTaps="handled">
         <View style={s.head}>
-          <Text style={s.title}>Intavolo</Text>
+          <Text style={s.title} maxFontSizeMultiplier={SCALE.display}>
+            Intavolo
+          </Text>
           <Text style={s.sub}>
             {guest
               ? 'Your progress will move into your account and sync.'

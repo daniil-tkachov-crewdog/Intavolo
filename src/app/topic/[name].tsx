@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Alert, FlatList, Text, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useStore } from '../../lib/store';
 import { WORDS, isLevel } from '../../lib/vocab';

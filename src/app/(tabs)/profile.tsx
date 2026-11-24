@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { SCALE, Text } from '../../components/Text';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../lib/auth';
@@ -30,7 +31,7 @@ export default function Profile() {
     <ScrollView contentContainerStyle={s.wrap}>
       <View style={[s.card, s.stats]}>
         <View style={s.total}>
-          <Text style={s.totalNum}>{fmt(progress.size)}</Text>
+          <Text style={s.totalNum} maxFontSizeMultiplier={SCALE.display}>{fmt(progress.size)}</Text>
           <Text style={s.totalText}>of {fmt(WORDS.length)} words added</Text>
         </View>
         <View style={s.bar}>
@@ -43,7 +44,7 @@ export default function Profile() {
         <View style={s.statRow}>
           {STATUSES.map((st) => (
             <View key={st} style={{ flex: 1 }}>
-              <Text style={[s.statNum, { color: c.status[st].fg }]}>{fmt(counts[st])}</Text>
+              <Text maxFontSizeMultiplier={SCALE.ui} style={[s.statNum, { color: c.status[st].fg }]}>{fmt(counts[st])}</Text>
               <Text style={s.statLabel}>{STATUS_LABEL[st]}</Text>
             </View>
           ))}
@@ -62,7 +63,7 @@ export default function Profile() {
             const on = speechRate === r;
             return (
               <Pressable key={r} onPress={() => setSpeechRate(r)} style={[s.seg, on && { backgroundColor: c.primary }]}>
-                <Text style={[s.segText, on && { ...F.semibold, color: '#FFFFFF' }]}>{r}</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} maxFontSizeMultiplier={SCALE.ui} style={[s.segText, on && { ...F.semibold, color: '#FFFFFF' }]}>{r}</Text>
               </Pressable>
             );
           })}
@@ -74,7 +75,7 @@ export default function Profile() {
             return (
               <Pressable key={a.mode} onPress={() => setMode(a.mode)} style={[s.seg, on && { backgroundColor: c.card }]}>
                 <Ionicons name={a.icon} size={a.mode === 'light' ? 15 : 14} color={color} />
-                <Text style={[s.segText, { color }, on && F.semibold]}>{a.label}</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} maxFontSizeMultiplier={SCALE.ui} style={[s.segText, { color }, on && F.semibold]}>{a.label}</Text>
               </Pressable>
             );
           })}
@@ -152,8 +153,8 @@ const useStyles = makeStyles((c) => ({
   guestLink: { ...F.semibold, color: c.primary },
   settingTitle: { ...F.semibold, fontSize: 15, color: c.text },
   segments: { flexDirection: 'row', backgroundColor: c.surface, borderRadius: 12, padding: 3, gap: 3 },
-  seg: { flex: 1, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10 },
-  segText: { ...F.medium, fontSize: 14, color: c.muted },
+  seg: { flex: 1, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 4, borderRadius: 10, minHeight: 36 },
+  segText: { ...F.medium, fontSize: 14, color: c.muted, flexShrink: 1 },
   list: { paddingVertical: 4 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 16 },
   itemText: { ...F.regular, flex: 1, fontSize: 16, color: c.text },

@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from './Text';
 import { STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
 import { F, makeStyles, useTheme } from '../lib/theme';
 

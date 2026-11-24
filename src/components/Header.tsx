@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { SCALE, Text } from './Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { F, makeStyles, useTheme } from '../lib/theme';
@@ -11,7 +12,9 @@ export function TabHeader({ title, right }: { title: string; right?: ReactNode }
   const { top } = useSafeAreaInsets();
   return (
     <View style={[s.tab, { paddingTop: top + 8 }]}>
-      <Text style={s.tabTitle}>{title}</Text>
+      <Text style={s.tabTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} maxFontSizeMultiplier={SCALE.title}>
+        {title}
+      </Text>
       <View style={s.actions}>
         <StreakBadge />
         {right}
@@ -32,7 +35,7 @@ export function StackHeader({ title, onBack }: { title: string; onBack?: () => v
           <Ionicons name="chevron-back" size={20} color={c.text} />
         </Pressable>
       )}
-      <Text style={[s.stackTitle, title.length > 14 && { fontSize: 22 }]} numberOfLines={1}>
+      <Text style={[s.stackTitle, title.length > 14 && { fontSize: 22 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} maxFontSizeMultiplier={SCALE.title}>
         {title}
       </Text>
     </View>
@@ -51,11 +54,11 @@ export function HeaderButton({ icon, onPress, label }: { icon: keyof typeof Ioni
 }
 
 const useStyles = makeStyles((c) => ({
-  tab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, backgroundColor: c.bg },
+  tab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 20, paddingBottom: 14, backgroundColor: c.bg },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  tabTitle: { ...F.bold, fontSize: 32, letterSpacing: -0.64, color: c.text },
+  tabTitle: { ...F.bold, flexShrink: 1, fontSize: 32, letterSpacing: -0.64, color: c.text },
   stack: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: c.bg },
   stackTitle: { ...F.bold, flex: 1, fontSize: 28, letterSpacing: -0.5, color: c.text },
-  round: { width: 40, height: 40, borderRadius: 20, backgroundColor: c.card, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center' },
-  roundBig: { width: 42, height: 42, borderRadius: 21 },
+  round: { minWidth: 40, minHeight: 40, borderRadius: 20, backgroundColor: c.card, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center' },
+  roundBig: { minWidth: 42, minHeight: 42, borderRadius: 21 },
 }));

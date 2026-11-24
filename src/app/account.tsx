@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '../components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import { Cancelled, useAuth, type Provider } from '../lib/auth';
 import { syncNow, useSyncStatus } from '../lib/sync';
@@ -158,7 +159,7 @@ const useStyles = makeStyles((c) => ({
   title: { ...F.semibold, fontSize: 15, color: c.text },
   small: { ...F.regular, fontSize: 13, color: c.muted },
   syncRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  pill: { minWidth: 92, height: 36, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accent.purple.soft },
+  pill: { minWidth: 92, minHeight: 36, paddingVertical: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accent.purple.soft },
   pillText: { ...F.semibold, fontSize: 14, color: c.accent.purple.text },
   delete: { alignItems: 'center', paddingVertical: 14, marginTop: 8 },
   deleteText: { ...F.semibold, fontSize: 16, color: c.accent.red.text },

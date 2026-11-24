@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { SCALE, Text, TextInput } from '../components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useStore } from '../lib/store';
 import { useActivity } from '../lib/activity';
 import { WORDS, WORD_BY_ID, englishOf, type Word } from '../lib/vocab';
 import { checkAnswer } from '../lib/answer';
-import { BelowHeader } from '../components/BelowHeader';
+import { BelowHeader, KeyboardAvoid } from '../components/BelowHeader';
 import { Button } from '../components/Button';
 import { SpeakButton } from '../components/WordCard';
 import { F, makeStyles, useTheme } from '../lib/theme';
@@ -69,13 +70,15 @@ function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
   }
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} keyboardVerticalOffset={100}>
+    <KeyboardAvoid>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
         <View style={s.steps}>
           {STEPS.map((t, i) => (
             <View key={t} style={{ flex: 1, gap: 4 }}>
               <View style={[s.bar, i <= step && { backgroundColor: c.primary }]} />
-              <Text style={[s.stepText, i === step && { color: c.primary }]}>{t}</Text>
+              <Text style={[s.stepText, i === step && { color: c.primary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} maxFontSizeMultiplier={SCALE.ui}>
+                {t}
+              </Text>
             </View>
           ))}
         </View>
@@ -92,7 +95,7 @@ function Session({ words, onAgain }: { words: Word[]; onAgain: () => void }) {
         )}
         {step === 3 && <Queue words={words} onDone={next} render={(w, done) => <Recall word={w} onDone={done} />} />}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoid>
   );
 }
 
@@ -125,7 +128,9 @@ function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
         {i + 1} / {words.length}
       </Text>
       <Big word={w} />
-      <Text style={s.en}>{englishOf(w).join(', ')}</Text>
+      <Text style={s.en} maxFontSizeMultiplier={SCALE.title}>
+        {englishOf(w).join(', ')}
+      </Text>
       {!!w.pos && <Text style={s.pos}>{w.pos}</Text>}
       {ex && (
         <View style={s.example}>
@@ -212,7 +217,7 @@ function Match({ words, onDone }: { words: Word[]; onDone: () => void }) {
         onPress={() => tap(side, w.id)}
         style={[s.cell, on && { borderColor: c.primary, backgroundColor: c.accent.purple.soft }, bad && { borderColor: c.accent.red.fg }, done && { opacity: 0.3 }]}
       >
-        <Text style={s.cellText} numberOfLines={2}>
+        <Text style={s.cellText} numberOfLines={3} maxFontSizeMultiplier={SCALE.ui}>
           {side === 'l' ? w.it : w.en}
         </Text>
       </Pressable>
@@ -222,9 +227,14 @@ function Match({ words, onDone }: { words: Word[]; onDone: () => void }) {
   return (
     <View style={s.card}>
       <Text style={s.hintText}>Tap the matching pairs</Text>
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-        <View style={{ flex: 1, gap: 8 }}>{left.map((w) => cell('l', w))}</View>
-        <View style={{ flex: 1, gap: 8 }}>{right.map((w) => cell('r', w))}</View>
+      {/* One row per pair so both cells in a row share a height when text wraps. */}
+      <View style={{ gap: 8, marginTop: 14 }}>
+        {left.map((w, i) => (
+          <View key={w.id} style={{ flexDirection: 'row', gap: 8 }}>
+            {cell('l', w)}
+            {cell('r', right[i])}
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -275,7 +285,9 @@ function Big({ word }: { word: Word }) {
   return (
     <View style={{ alignItems: 'center' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Text style={s.big}>{word.it}</Text>
+        <Text style={s.big} maxFontSizeMultiplier={SCALE.display}>
+          {word.it}
+        </Text>
         <SpeakButton text={word.it} size={20} look="soft" />
       </View>
       {!!word.ipa && <Text style={s.sub}>{word.ipa}</Text>}
@@ -314,7 +326,7 @@ function Center({ title, text, children }: { title: string; text: string; childr
 
 const useStyles = makeStyles((c) => ({
   wrap: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 },
-  steps: { flexDirection: 'row', gap: 6, marginBottom: 14 },
+  steps: { flexDirection: 'row', gap: 4, marginBottom: 14 },
   bar: { height: 4, borderRadius: 2, backgroundColor: c.border },
   stepText: { ...F.semibold, fontSize: 12, color: c.muted, textAlign: 'center' },
   card: { backgroundColor: c.card, borderRadius: 28, padding: 22, borderWidth: 1, borderColor: c.border },
@@ -326,11 +338,11 @@ const useStyles = makeStyles((c) => ({
   example: { backgroundColor: c.surface, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 14, marginTop: 18, gap: 2 },
   exIt: { ...F.regular, fontSize: 16, color: c.text },
   exEn: { ...F.regular, fontSize: 14, color: c.muted },
-  option: { height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 44 },
+  option: { minHeight: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 44, paddingVertical: 12 },
   optionText: { ...F.regular, fontSize: 17, color: c.text, textAlign: 'center' },
   optionOn: { ...F.semibold, color: '#FFFFFF' },
-  optionIcon: { position: 'absolute', right: 16 },
-  cell: { minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: c.border, backgroundColor: c.surface, padding: 8, alignItems: 'center', justifyContent: 'center' },
+  optionIcon: { position: 'absolute', right: 16, top: '50%', marginTop: -10 },
+  cell: { flex: 1, minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: c.border, backgroundColor: c.surface, paddingVertical: 8, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
   cellText: { ...F.medium, fontSize: 15, color: c.text, textAlign: 'center' },
   hintText: { ...F.regular, color: c.muted, textAlign: 'center' },
   input: { ...F.regular, marginTop: 24, borderWidth: 1.5, borderColor: c.border, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, fontSize: 20, color: c.text, backgroundColor: c.surface },

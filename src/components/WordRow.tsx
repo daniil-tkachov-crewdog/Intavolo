@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
-import { LayoutAnimation, Pressable, Text, View } from 'react-native';
+import { LayoutAnimation, Pressable, View } from 'react-native';
+import { Text } from './Text';
 import type { Word } from '../lib/vocab';
 import { STATUS_LABEL, type Status } from '../lib/engine';
 import { SpeakButton } from './WordCard';

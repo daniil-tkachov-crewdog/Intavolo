@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import { SCALE, Text } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { F, glow, useTheme } from '../lib/theme';
 
@@ -33,13 +34,15 @@ export function Button({ label, onPress, variant = 'primary', icon, iconRight, d
       style={({ pressed }) => [s.btn, { backgroundColor: look.bg }, look.extra, (pressed || disabled) && { opacity: 0.55 }, style]}
     >
       {icon && <Ionicons name={icon} size={20} color={look.fg} />}
-      <Text style={[s.label, { color: look.fg }]}>{label}</Text>
+      <Text style={[s.label, { color: look.fg }]} maxFontSizeMultiplier={SCALE.ui} numberOfLines={2}>
+        {label}
+      </Text>
       {iconRight && <Ionicons name={iconRight} size={18} color={look.fg} />}
     </Pressable>
   );
 }
 
 const s = StyleSheet.create({
-  btn: { flex: 1, height: 54, borderRadius: 18, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
-  label: { ...F.semibold, fontSize: 16 },
+  btn: { flex: 1, minHeight: 54, borderRadius: 18, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10 },
+  label: { ...F.semibold, fontSize: 16, textAlign: 'center', flexShrink: 1 },
 });

@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { SCALE, Text } from '../components/Text';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../lib/store';
 import { useActivity } from '../lib/activity';
 import { LEVEL_COUNTS, SESSION, atLevel, fromMyWords, pickSession, type Sentence, type Source } from '../lib/sentences';
 import { tiles } from '../lib/translate';
-import { BelowHeader } from '../components/BelowHeader';
+import { BelowHeader, KeyboardAvoid } from '../components/BelowHeader';
 import { Button } from '../components/Button';
 import { SentenceExercise, type Kind } from '../components/SentenceExercise';
 import { F, makeStyles, useTheme } from '../lib/theme';
@@ -108,11 +109,11 @@ function Session({ round, onDone }: { round: Round; onDone: (score: number) => v
   );
   const item = round.items[i];
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} keyboardVerticalOffset={100}>
+    <KeyboardAvoid>
       <ScrollView contentContainerStyle={s.practice} keyboardShouldPersistTaps="handled">
         <SentenceExercise key={i} sentence={item.sentence} kind={item.kind} top={top} onNext={next} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoid>
   );
 }
 
@@ -121,7 +122,7 @@ function Result({ score, total, onAgain, onSetup }: { score: number; total: numb
   return (
     <View style={s.center}>
       <Text style={{ fontSize: 56 }}>{score / total >= 0.8 ? '🎉' : '💪'}</Text>
-      <Text style={s.big}>
+      <Text style={s.big} maxFontSizeMultiplier={SCALE.title}>
         {score} / {total} correct
       </Text>
       <View style={s.buttons}>

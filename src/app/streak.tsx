@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Switch, View } from 'react-native';
+import { SCALE, Text } from '../components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import { useActivity } from '../lib/activity';
 import { permissionGranted } from '../lib/reminders';
@@ -31,14 +32,16 @@ export default function Streak() {
       <View style={[s.card, s.hero]}>
         <Ionicons name={info.todayDone ? 'flame' : 'flame-outline'} size={56} color={info.todayDone ? c.accent.amber.fg : c.muted} />
         <View style={{ flex: 1 }}>
-          <Text style={s.big}>{info.current}</Text>
+          <Text style={s.big} maxFontSizeMultiplier={SCALE.display}>
+            {info.current}
+          </Text>
           <Text style={s.bigLabel}>day streak</Text>
           <Text style={s.sub}>{subtitle}</Text>
         </View>
       </View>
 
       <View style={[s.card, s.pad]}>
-        <View style={s.between}>
+        <View style={[s.between, { flexWrap: 'wrap', gap: 4 }]}>
           <Text style={s.h}>Today</Text>
           <Text style={s.muted}>
             {Math.min(done, goal)} / {goal} exercises
@@ -63,7 +66,7 @@ export default function Streak() {
             const on = goal === g;
             return (
               <Pressable key={g} onPress={() => setGoal(g)} style={[s.seg, on && { backgroundColor: c.primary }]}>
-                <Text style={[s.segText, on && { ...F.semibold, color: '#FFFFFF' }]}>{g}</Text>
+                <Text maxFontSizeMultiplier={SCALE.ui} numberOfLines={1} style={[s.segText, on && { ...F.semibold, color: '#FFFFFF' }]}>{g}</Text>
               </Pressable>
             );
           })}
@@ -72,14 +75,14 @@ export default function Streak() {
       </View>
 
       <View style={[s.card, s.pad]}>
-        <View style={s.between}>
-          <Text style={s.h}>Daily reminder</Text>
+        <View style={[s.between, { gap: 12 }]}>
+          <Text style={[s.h, { flexShrink: 1 }]}>Daily reminder</Text>
           <Switch value={reminder.enabled} onValueChange={toggle} trackColor={{ true: c.primary }} />
         </View>
         {reminder.enabled && (
           <View style={s.time}>
             <Round icon="remove" onPress={() => shiftTime(-15)} />
-            <Text style={s.timeText}>
+            <Text style={s.timeText} maxFontSizeMultiplier={SCALE.title}>
               {pad(reminder.hour)}:{pad(reminder.minute)}
             </Text>
             <Round icon="add" onPress={() => shiftTime(15)} />
@@ -116,12 +119,12 @@ function Calendar() {
     <View style={[s.card, s.pad]}>
       <View style={s.between}>
         <Round icon="chevron-back" onPress={() => shift(-1)} />
-        <Text style={s.h}>{month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</Text>
+        <Text style={[s.h, { flex: 1, textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={SCALE.title}>{month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</Text>
         <Round icon="chevron-forward" onPress={() => shift(1)} disabled={isCurrent} />
       </View>
       <View style={s.grid}>
         {WEEKDAYS.map((w, i) => (
-          <Text key={i} style={s.weekday}>
+          <Text key={i} style={s.weekday} maxFontSizeMultiplier={SCALE.ui}>
             {w}
           </Text>
         ))}
@@ -136,7 +139,7 @@ function Calendar() {
                 {st === 'frozen' ? (
                   <Ionicons name="snow" size={14} color={c.accent.blue.fg} />
                 ) : (
-                  <Text style={[s.dayNum, st === 'done' && { ...F.bold, color: '#FFFFFF' }, key > today && { opacity: 0.35 }]}>{d.getDate()}</Text>
+                  <Text maxFontSizeMultiplier={SCALE.ui} adjustsFontSizeToFit numberOfLines={1} style={[s.dayNum, st === 'done' && { ...F.bold, color: '#FFFFFF' }, key > today && { opacity: 0.35 }]}>{d.getDate()}</Text>
                 )}
               </View>
             </View>
@@ -152,8 +155,8 @@ function Stat({ icon, color, value, label }: { icon: keyof typeof Ionicons.glyph
   return (
     <View style={s.stat}>
       <Ionicons name={icon} size={20} color={color} />
-      <View>
-        <Text style={s.statNum}>{value}</Text>
+      <View style={{ flexShrink: 1 }}>
+        <Text style={s.statNum} maxFontSizeMultiplier={SCALE.ui}>{value}</Text>
         <Text style={s.statLabel}>{label}</Text>
       </View>
     </View>
@@ -174,7 +177,7 @@ const useStyles = makeStyles((c) => ({
   wrap: { paddingHorizontal: 16, paddingBottom: 32, gap: 8 },
   card: { backgroundColor: c.card, borderWidth: 1, borderColor: c.border, borderRadius: 22 },
   pad: { padding: 16, gap: 12 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20, borderRadius: 26 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: 26 },
   big: { ...F.bold, fontSize: 44, letterSpacing: -1, color: c.text, lineHeight: 48 },
   bigLabel: { ...F.semibold, fontSize: 16, color: c.text },
   sub: { ...F.regular, fontSize: 14, color: c.muted, marginTop: 4 },
@@ -190,11 +193,11 @@ const useStyles = makeStyles((c) => ({
   note: { ...F.regular, fontSize: 13, lineHeight: 18, color: c.muted },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   weekday: { ...F.medium, width: `${100 / 7}%`, textAlign: 'center', fontSize: 12, color: c.muted, paddingBottom: 6 },
-  cell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3 },
-  dot: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  cell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3, paddingHorizontal: 1 },
+  dot: { width: '100%', maxWidth: 34, aspectRatio: 1, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   dayNum: { ...F.medium, fontSize: 14, color: c.text },
   segments: { flexDirection: 'row', backgroundColor: c.surface, borderRadius: 12, padding: 3, gap: 3 },
-  seg: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10 },
+  seg: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10, minHeight: 36 },
   segText: { ...F.medium, fontSize: 14, color: c.muted },
   time: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24 },
   timeText: { ...F.bold, fontSize: 32, color: c.text, minWidth: 100, textAlign: 'center' },

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { Animated, LayoutAnimation, Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, LayoutAnimation, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../lib/store';
 import { WORDS, SHUFFLE_KEY } from '../../lib/vocab';

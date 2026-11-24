@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
-import { Text, type ColorValue } from 'react-native';
+import { type ColorValue } from 'react-native';
+import { SCALE, Text } from '../../components/Text';
 import { router, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { F, useTheme } from '../../lib/theme';
@@ -15,7 +16,7 @@ const tab = (title: string, name: Icon) => ({
     <Ionicons name={focused ? name : (`${name}-outline` as Icon)} color={color as IconColor} size={25} />
   ),
   tabBarLabel: ({ color, focused }: { color: ColorValue; focused: boolean }) => (
-    <Text style={[focused ? F.semibold : F.medium, { color, fontSize: 11, marginTop: 3 }]}>{title}</Text>
+    <Text numberOfLines={1} maxFontSizeMultiplier={SCALE.ui} style={[focused ? F.semibold : F.medium, { color, fontSize: 11, marginTop: 3 }]}>{title}</Text>
   ),
 });
 

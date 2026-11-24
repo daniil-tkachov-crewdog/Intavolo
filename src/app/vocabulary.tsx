@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
+import { Text } from '../components/Text';
 import { useStore } from '../lib/store';
 import { WORD_BY_ID, englishOf } from '../lib/vocab';
 import { GOALS, STATUSES, STATUS_LABEL, type Status } from '../lib/engine';

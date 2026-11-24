@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, Text, View } from 'react-native';
+import { Animated, Modal, ScrollView, View } from 'react-native';
+import { SCALE, Text } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { useActivity } from '../lib/activity';
 import { Button } from './Button';
@@ -32,12 +33,13 @@ export function Celebration() {
   return (
     <Modal transparent animationType="fade" visible onRequestClose={dismissCelebration}>
       <View style={s.backdrop}>
+        <ScrollView style={s.scroll} contentContainerStyle={s.scrollInner} bounces={false}>
         <View style={s.card}>
           <Animated.View style={[s.flame, { transform: [{ scale }] }]}>
             <Ionicons name="flame" size={72} color={c.accent.amber.fg} />
-            <Text style={s.num}>{streak}</Text>
+            <Text style={s.num} maxFontSizeMultiplier={SCALE.display}>{streak}</Text>
           </Animated.View>
-          <Text style={s.title}>{title}</Text>
+          <Text style={s.title} maxFontSizeMultiplier={SCALE.title}>{title}</Text>
           <Text style={s.text}>{text}</Text>
           {freezeEarned && (
             <View style={s.freeze}>
@@ -73,14 +75,17 @@ export function Celebration() {
             </View>
           )}
         </View>
+        </ScrollView>
       </View>
     </Modal>
   );
 }
 
 const useStyles = makeStyles((c) => ({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 360, backgroundColor: c.card, borderRadius: 28, padding: 24, alignItems: 'center', gap: 10 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  scroll: { flex: 1 },
+  scrollInner: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 48 },
+  card: { width: '100%', maxWidth: 360, backgroundColor: c.card, borderRadius: 28, padding: 22, alignItems: 'center', gap: 10 },
   flame: { alignItems: 'center', marginBottom: 4 },
   num: { ...F.bold, fontSize: 44, letterSpacing: -1, color: c.accent.amber.text, marginTop: -6 },
   title: { ...F.bold, fontSize: 24, color: c.text, textAlign: 'center' },
