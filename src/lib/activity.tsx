@@ -55,7 +55,8 @@ const loadReminder = (): Reminder => ({
 });
 
 export function ActivityProvider({ children }: { children: ReactNode }) {
-  const { session } = useAuth();
+  const { session, guest } = useAuth();
+  const inApp = !!session || guest;
   const [days, setDays] = useState(load);
   const [goal, setGoalState] = useState(() => loadGoal(days));
   const [today, setToday] = useState(() => dayKey(new Date()));
@@ -86,9 +87,9 @@ export function ActivityProvider({ children }: { children: ReactNode }) {
 
   // Keep the notification plan in sync with reality.
   useEffect(() => {
-    const run = session ? planReminders({ ...reminder, today, todayDone: info.todayDone, streak: info.current }) : cancelReminders();
+    const run = inApp ? planReminders({ ...reminder, today, todayDone: info.todayDone, streak: info.current }) : cancelReminders();
     run.catch(() => {});
-  }, [session, reminder, today, info.todayDone, info.current]);
+  }, [inApp, reminder, today, info.todayDone, info.current]);
 
   const record = useCallback(
     (n = 1) => {

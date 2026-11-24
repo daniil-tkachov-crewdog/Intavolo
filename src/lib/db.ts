@@ -136,7 +136,7 @@ export function applyRemote(rows: SyncRow[]) {
 /** Remove all learning data from the phone (sign out, account switch, delete account). */
 export function wipeProgress() {
   db.execSync('DELETE FROM progress; DELETE FROM skipped; DELETE FROM activity;');
-  db.runSync("DELETE FROM settings WHERE key IN ('syncUser', 'syncCursor', 'activityCursor', 'lastSyncedAt', 'dailyGoal')");
+  db.runSync("DELETE FROM settings WHERE key IN ('syncUser', 'syncCursor', 'activityCursor', 'lastSyncedAt', 'dailyGoal', 'mergePending')");
 }
 
 export function deleteSetting(key: string) {

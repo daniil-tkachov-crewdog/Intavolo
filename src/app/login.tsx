@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Cancelled, useAuth } from '../lib/auth';
 import { Button } from '../components/Button';
 import { Field } from '../components/Field';
@@ -11,8 +12,9 @@ export default function Login() {
   const s = useStyles();
   const { c } = useTheme();
   const { top, bottom } = useSafeAreaInsets();
-  const { signInEmail, signUpEmail, signInGoogle, signInApple } = useAuth();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const { signInEmail, signUpEmail, signInGoogle, signInApple, guest, continueAsGuest } = useAuth();
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const [mode, setMode] = useState<'login' | 'signup'>(params.mode === 'signup' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,13 +45,21 @@ export default function Login() {
   };
 
   const signup = mode === 'signup';
+  // Guests opened this from Profile: just go back. First launch: start using the app without an account.
+  const skip = () => (guest ? (router.canGoBack() ? router.back() : router.replace('/')) : continueAsGuest());
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={[s.wrap, { paddingTop: top + 64, paddingBottom: bottom + 24 }]} keyboardShouldPersistTaps="handled">
         <View style={s.head}>
           <Text style={s.title}>Intavolo</Text>
-          <Text style={s.sub}>{signup ? 'Create an account to save your progress.' : 'Log in to continue learning Italian.'}</Text>
+          <Text style={s.sub}>
+            {guest
+              ? 'Your progress will move into your account and sync.'
+              : signup
+                ? 'Create an account to save your progress.'
+                : 'Log in to continue learning Italian.'}
+          </Text>
         </View>
 
         <View style={s.group}>
@@ -105,6 +115,10 @@ export default function Login() {
             <Text style={s.switchLink}>{signup ? 'Log in' : 'Create account'}</Text>
           </Text>
         </Pressable>
+
+        <Pressable onPress={skip} disabled={busy} hitSlop={8} style={s.switch}>
+          <Text style={s.switchLink}>{guest ? 'Not now' : 'Continue without an account'}</Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -123,5 +137,5 @@ const useStyles = makeStyles((c) => ({
   error: { ...F.regular, fontSize: 14, color: c.accent.red.text },
   switch: { alignSelf: 'center', paddingVertical: 4 },
   switchText: { ...F.regular, fontSize: 15, color: c.muted },
-  switchLink: { ...F.semibold, color: c.primary },
+  switchLink: { ...F.semibold, fontSize: 15, color: c.primary },
 }));

@@ -28,18 +28,19 @@ export default function RootLayout() {
 
 function Screens() {
   const { c } = useTheme();
-  const { session, ready } = useAuth();
+  const { session, ready, guest } = useAuth();
   const signedIn = !!session;
+  const inApp = signedIn || guest;
   const tapped = Notifications.useLastNotificationResponse();
 
   // Reminder tapped → straight to practice.
   useEffect(() => {
     const url = tapped?.notification.request.content.data?.url;
-    if (ready && signedIn && typeof url === 'string') {
+    if (ready && inApp && typeof url === 'string') {
       router.navigate(url as Href);
       Notifications.clearLastNotificationResponse();
     }
-  }, [tapped, ready, signedIn]);
+  }, [tapped, ready, inApp]);
 
   if (!ready) return null;
 
@@ -54,7 +55,7 @@ function Screens() {
           ),
         }}
       >
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={inApp}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="vocabulary" options={{ title: 'Vocabulary' }} />
           <Stack.Screen name="topics" options={{ title: 'Topics' }} />
@@ -64,14 +65,16 @@ function Screens() {
           <Stack.Screen name="sentences" options={{ title: 'Sentences' }} />
           <Stack.Screen name="grammar/[id]" options={{ title: '' }} />
           <Stack.Screen name="topic/[name]" options={{ title: '' }} />
-          <Stack.Screen name="account" options={{ title: 'Account' }} />
           <Stack.Screen name="streak" options={{ title: 'Streak' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn}>
+          <Stack.Screen name="account" options={{ title: 'Account' }} />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
         </Stack.Protected>
       </Stack>
-      {signedIn && <Celebration />}
+      {inApp && <Celebration />}
     </>
   );
 }

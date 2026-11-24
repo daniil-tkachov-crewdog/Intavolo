@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
 import { supabase } from './supabase';
 import { hasUnsynced, startSync, stopSync, syncNow } from './sync';
+import * as db from './db';
 
 const GOOGLE_IOS_CLIENT_ID = '907309564443-n1fp9jvrm35ub49jqm6tmr5ja8poebgn.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID = '907309564443-ga3u8ll3pli9vq0l69aeq02883ukrm18.apps.googleusercontent.com';
@@ -15,6 +16,9 @@ export type Provider = 'email' | 'google' | 'apple';
 interface Auth {
   session: Session | null;
   ready: boolean;
+  /** Using the app without an account; progress stays on this phone until they sign up or log in. */
+  guest: boolean;
+  continueAsGuest: () => void;
   provider: Provider;
   signInEmail: (email: string, password: string) => Promise<void>;
   signUpEmail: (email: string, password: string) => Promise<void>;
@@ -38,6 +42,7 @@ export class Cancelled extends Error {}
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
+  const [guestFlag, setGuestFlag] = useState(() => db.getSetting('guest') === '1');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -50,7 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const uid = session?.user.id;
   useEffect(() => {
-    if (uid) startSync(uid);
+    if (!uid) return;
+    // Guest progress (if any) is adopted by the account in startSync; after a later sign-out they land on login.
+    db.deleteSetting('guest');
+    setGuestFlag(false);
+    startSync(uid);
   }, [uid]);
 
   const value = useMemo<Auth>(() => {
@@ -61,6 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {
       session,
       ready,
+      guest: !session && guestFlag,
+      continueAsGuest: () => {
+        db.setSetting('guest', '1');
+        setGuestFlag(true);
+      },
       provider: (session?.user.app_metadata.provider as Provider) ?? 'email',
       signInEmail: async (email, password) => check(await supabase.auth.signInWithPassword({ email, password })),
       signUpEmail: async (email, password) => check(await supabase.auth.signUp({ email, password })),
@@ -140,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await localSignOut();
       },
     };
-  }, [session, ready]);
+  }, [session, ready, guestFlag]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

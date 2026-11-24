@@ -101,8 +101,15 @@ export function syncNow(): Promise<boolean> {
   set({ syncing: true });
   running = (async () => {
     try {
-      await push(uid);
-      await pull();
+      // Guest data joining an account: pull first, so newer account rows win over older guest rows (newer guest rows stay dirty and get pushed).
+      if (db.getSetting('mergePending')) {
+        await pull();
+        await push(uid);
+        db.deleteSetting('mergePending');
+      } else {
+        await push(uid);
+        await pull();
+      }
       await pushActivity(uid);
       if (await pullActivity()) emitDataChanged();
       const now = Date.now();
@@ -129,9 +136,16 @@ export function scheduleSync() {
   }, 3000);
 }
 
-/** Called when a session appears. Local data from another user (or pre-account) is discarded. */
+/**
+ * Called when a session appears. Guest data (no syncUser yet) is adopted into the account and merged on the next sync;
+ * data from another account is discarded.
+ */
 export function startSync(uid: string) {
-  if (db.getSetting('syncUser') !== uid) {
+  const owner = db.getSetting('syncUser');
+  if (owner === null) {
+    db.setSetting('syncUser', uid);
+    db.setSetting('mergePending', '1');
+  } else if (owner !== uid) {
     db.wipeProgress();
     db.setSetting('syncUser', uid);
     emitDataChanged();

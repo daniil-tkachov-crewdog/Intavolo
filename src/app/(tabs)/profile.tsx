@@ -2,10 +2,12 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../lib/auth';
 import { useStore, SPEECH_RATES, type SpeechRate } from '../../lib/store';
 import { STATUSES, STATUS_LABEL } from '../../lib/engine';
 import { WORDS } from '../../lib/vocab';
 import { IconTile } from '../../components/IconTile';
+import { Button } from '../../components/Button';
 import { F, makeStyles, useTheme, type ThemeMode } from '../../lib/theme';
 
 const APPEARANCE: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -20,6 +22,7 @@ export default function Profile() {
   const s = useStyles();
   const { c, mode, setMode } = useTheme();
   const { progress, speechRate, setSpeechRate } = useStore();
+  const { guest } = useAuth();
   const counts = Object.fromEntries(STATUSES.map((st) => [st, 0])) as Record<string, number>;
   for (const p of progress.values()) counts[p.status]++;
 
@@ -78,12 +81,31 @@ export default function Profile() {
         </Setting>
       </View>
 
+      {guest && (
+        <View style={[s.card, s.guest]}>
+          <Text style={s.settingTitle}>Save your progress</Text>
+          <Text style={s.guestText}>Your progress is stored only on this phone. Create an account to back it up and sync it across devices.</Text>
+          <View style={{ flexDirection: 'row' }}>
+            <Button label="Create account" onPress={() => router.push({ pathname: '/login', params: { mode: 'signup' } })} />
+          </View>
+          <Pressable onPress={() => router.push('/login')} hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 2 }}>
+            <Text style={s.guestText}>
+              Already have an account? <Text style={s.guestLink}>Log in</Text>
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
       <View style={[s.card, s.list]}>
-        <Pressable onPress={() => router.push('/account')} style={({ pressed }) => [s.item, pressed && { opacity: 0.7 }]}>
-          <Text style={s.itemText}>Account</Text>
-          <Ionicons name="chevron-forward" size={16} color={c.muted} />
-        </Pressable>
-        <View style={s.sep} />
+        {!guest && (
+          <>
+            <Pressable onPress={() => router.push('/account')} style={({ pressed }) => [s.item, pressed && { opacity: 0.7 }]}>
+              <Text style={s.itemText}>Account</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.muted} />
+            </Pressable>
+            <View style={s.sep} />
+          </>
+        )}
         <View style={s.item}>
           <Text style={s.itemText}>Payment</Text>
           <Text style={s.soon}>Coming soon</Text>
@@ -125,6 +147,9 @@ const useStyles = makeStyles((c) => ({
   link: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   linkText: { ...F.semibold, flex: 1, fontSize: 16, color: c.text },
   settings: { padding: 14, gap: 12 },
+  guest: { padding: 16, gap: 10 },
+  guestText: { ...F.regular, fontSize: 14, lineHeight: 20, color: c.muted },
+  guestLink: { ...F.semibold, color: c.primary },
   settingTitle: { ...F.semibold, fontSize: 15, color: c.text },
   segments: { flexDirection: 'row', backgroundColor: c.surface, borderRadius: 12, padding: 3, gap: 3 },
   seg: { flex: 1, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10 },
