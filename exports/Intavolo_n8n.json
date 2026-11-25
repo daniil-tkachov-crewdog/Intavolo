@@ -1,0 +1,260 @@
+{
+  "name": "Intavolo",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "words",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "file",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4cbb1904-ee20-4cd9-9098-cff09096cde3",
+      "name": "On form submission",
+      "webhookId": "a0915b35-22f6-475d-91bf-69c85904b845"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "file",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c4145532-d8f7-4590-9b78-c6a7c941d372",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "b7e1c2d4-0000-4000-8000-000000000001",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=id: {{ $json.id }}\nword: {{ $json.word }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert Italian lexicographer and CEFR-certified Italian teacher.\nYou receive ONE Italian vocabulary entry (id + word) from a language-learning app.\nThe data may be wrong: the word may be English, misspelled, a proper noun, or an inflected form.\n\nReturn ONLY one JSON object, no markdown, no comments, matching exactly this schema:\n\n{\n  \"id\": number,                     // copy from input\n  \"valid\": boolean,                 // false if not a real standard Italian word\n  \"invalid_reason\": string|null,    // short reason if valid=false, else null\n  \"lemma\": string|null,             // most basic dictionary form (see rules)\n  \"pos\": \"noun\"|\"verb\"|\"adj\"|\"adv\"|\"prep\"|\"conj\"|\"pron\"|\"det\"|\"num\"|\"intj\"|\"article\"|\"particle\"|null,\n  \"gender\": \"m\"|\"f\"|\"m/f\"|null,     // nouns only\n  \"ipa\": string|null,               // IPA of the lemma, e.g. \"/ˈpɔr.ta/\"\n  \"level\": \"A1\"|\"A2\"|\"B1\"|\"B2\"|\"C1\"|\"C2\"|null,\n  \"topic\": string|null,             // one of the allowed topics below\n  \"en_1\": string|null,              // most common English translation\n  \"en_2\": string|null,              // 2nd distinct meaning, or null\n  \"en_3\": string|null,              // 3rd distinct meaning, or null\n  \"with_article\": string|null,      // nouns: definite article + lemma (\"l'albero\", \"lo zaino\")\n  \"plural\": string|null,            // nouns: definite article + plural (\"gli alberi\")\n  \"adj_forms\": {\"m_sg\":string,\"f_sg\":string,\"m_pl\":string,\"f_pl\":string}|null,  // adjectives only\n  \"verb\": {\"auxiliary\":\"avere\"|\"essere\",\"present\":string,\"past\":string,\"future\":string}|null, // verbs only, \"io\" form; past = passato prossimo\n  \"examples\": [                     // exactly 3, in this order\n    {\"level\":\"A2\",\"it\":string,\"en\":string},\n    {\"level\":\"B1\",\"it\":string,\"en\":string},\n    {\"level\":\"C1\",\"it\":string,\"en\":string}\n  ]\n}\n\nAllowed topics: Basics, Nature, People & Society, Other, Descriptions, Body & Health,\nCommunication, Money & Shopping, Actions, Places & Travel, Events, Home & Objects,\nMind & Ideas, Life & Situations, Numbers & Quantity, Feelings, Food & Drink, Time,\nAnimals, Sports & Games.\n\nRules:\n- lemma = the most basic dictionary form: verbs → infinitive, nouns → singular, adjectives → masculine singular. If the input is an inflected form (participle, plural, feminine, conjugated), return its basic form as lemma and fill all fields for that basic form.\n- lemma must be plain letters only, no brackets or symbols.\n- English translations must be English words, never the Italian word repeated (unless a true loanword identical in both languages, e.g. \"computer\").\n- Translations: lowercase, verbs start with \"to \" (\"to speak\"), no explanations.\n- en_2/en_3 only for genuinely different common meanings, not synonyms of en_1.\n- Verb forms WITHOUT subject pronoun: \"parlo\", \"ho parlato\", \"parlerò\". Reflexive verbs keep the reflexive pronoun: \"mi lavo\", \"mi sono lavato\", \"mi laverò\".\n- ipa is required for every valid word: syllables separated by \".\", stress mark ˈ, no length marks.\n- Fields that do not apply to the part of speech MUST be null.\n- If valid=false: every field except id and invalid_reason is null and examples is [].\n- Examples: natural, everyday Italian; each must contain the word (any form); difficulty must match the level (A2 short and simple, B1 everyday, C1 complex/idiomatic).\n- Never invent words. If unsure the word exists in standard Italian, set valid=false.",
+          "batching": {
+            "batchSize": 20,
+            "delayBetweenBatches": 1000
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "b0fbacd4-f83e-48c5-807a-1f466ca52a93",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        208
+      ],
+      "id": "d00ce180-825a-4f62-8ddc-f1177890b7ad",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "M1sULNlnUIP0icLB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": { \"type\": \"number\" },\n    \"valid\": { \"type\": \"boolean\" },\n    \"invalid_reason\": { \"type\": [\"string\", \"null\"] },\n    \"lemma\": { \"type\": [\"string\", \"null\"] },\n    \"pos\": { \"type\": [\"string\", \"null\"], \"enum\": [\"noun\",\"verb\",\"adj\",\"adv\",\"prep\",\"conj\",\"pron\",\"det\",\"num\",\"intj\",\"article\",\"particle\",null] },\n    \"gender\": { \"type\": [\"string\", \"null\"], \"enum\": [\"m\",\"f\",\"m/f\",null] },\n    \"ipa\": { \"type\": [\"string\", \"null\"] },\n    \"level\": { \"type\": [\"string\", \"null\"], \"enum\": [\"A1\",\"A2\",\"B1\",\"B2\",\"C1\",\"C2\",null] },\n    \"topic\": { \"type\": [\"string\", \"null\"], \"enum\": [\"Basics\",\"Nature\",\"People & Society\",\"Other\",\"Descriptions\",\"Body & Health\",\"Communication\",\"Money & Shopping\",\"Actions\",\"Places & Travel\",\"Events\",\"Home & Objects\",\"Mind & Ideas\",\"Life & Situations\",\"Numbers & Quantity\",\"Feelings\",\"Food & Drink\",\"Time\",\"Animals\",\"Sports & Games\",null] },\n    \"en_1\": { \"type\": [\"string\", \"null\"] },\n    \"en_2\": { \"type\": [\"string\", \"null\"] },\n    \"en_3\": { \"type\": [\"string\", \"null\"] },\n    \"with_article\": { \"type\": [\"string\", \"null\"] },\n    \"plural\": { \"type\": [\"string\", \"null\"] },\n    \"adj_forms\": {\n      \"type\": [\"object\", \"null\"],\n      \"properties\": {\n        \"m_sg\": { \"type\": \"string\" },\n        \"f_sg\": { \"type\": \"string\" },\n        \"m_pl\": { \"type\": \"string\" },\n        \"f_pl\": { \"type\": \"string\" }\n      },\n      \"required\": [\"m_sg\",\"f_sg\",\"m_pl\",\"f_pl\"]\n    },\n    \"verb\": {\n      \"type\": [\"object\", \"null\"],\n      \"properties\": {\n        \"auxiliary\": { \"type\": \"string\", \"enum\": [\"avere\",\"essere\"] },\n        \"present\": { \"type\": \"string\" },\n        \"past\": { \"type\": \"string\" },\n        \"future\": { \"type\": \"string\" }\n      },\n      \"required\": [\"auxiliary\",\"present\",\"past\",\"future\"]\n    },\n    \"examples\": {\n      \"type\": \"array\",\n      \"maxItems\": 3,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"level\": { \"type\": \"string\", \"enum\": [\"A2\",\"B1\",\"C1\"] },\n          \"it\": { \"type\": \"string\" },\n          \"en\": { \"type\": \"string\" }\n        },\n        \"required\": [\"level\",\"it\",\"en\"]\n      }\n    }\n  },\n  \"required\": [\"id\",\"valid\",\"invalid_reason\",\"lemma\",\"pos\",\"gender\",\"ipa\",\"level\",\"topic\",\"en_1\",\"en_2\",\"en_3\",\"with_article\",\"plural\",\"adj_forms\",\"verb\",\"examples\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        208
+      ],
+      "id": "175ae586-21f2-4870-a768-46a342f920f7",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const input = $('Extract from File').item.json;\nconst r = { ...($json.output ?? $json), id: Number(input.id), original: input.word };\n\nconst errs = [];\nif (r.valid) {\n  if (!r.lemma || !/^[a-zà-ùA-ZÀ-Ù' ]+$/.test(r.lemma)) errs.push('bad lemma');\n  if (!r.en_1) errs.push('no en_1');\n  if (r.en_1 && r.en_1.toLowerCase() === (r.lemma || '').toLowerCase()) errs.push('en = it');\n  if (!r.ipa) errs.push('no ipa');\n  if (!Array.isArray(r.examples) || r.examples.length !== 3) errs.push('examples != 3');\n  if (r.pos === 'noun' && (!r.with_article || !r.gender || !r.plural)) errs.push('noun fields missing');\n  if (r.pos === 'verb' && !r.verb) errs.push('verb fields missing');\n  if (r.pos === 'adj' && !r.adj_forms) errs.push('adj fields missing');\n}\nreturn { ...r, _errors: errs.join('; ') || null };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "c887e569-b0ee-4768-8b0c-2da975e1c8ea",
+      "name": "Validate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const groups = {};\nconst out = [];\nfor (const { json: r } of $input.all()) {\n  if (!r.valid) { out.push(r); continue; }\n  const key = `${r.lemma.toLowerCase()}|${r.pos}`;\n  (groups[key] ??= []).push(r);\n}\nfor (const list of Object.values(groups)) {\n  list.sort((a, b) =>\n    (b.original?.toLowerCase() === b.lemma.toLowerCase()) - (a.original?.toLowerCase() === a.lemma.toLowerCase())\n    || a.id - b.id);\n  const [main, ...rest] = list;\n  out.push({ ...main, merged_ids: rest.map(r => r.id) });\n  for (const r of rest) out.push({ id: r.id, valid: false, invalid_reason: `merged into ${main.id}`, merged_into: main.id });\n}\nreturn out.map(json => ({ json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "b7e1c2d4-0000-4000-8000-000000000002",
+      "name": "Merge duplicates"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "3d4d3e3d-94d0-4861-bea9-f1fb8ba47a99",
+      "name": "Convert to File"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Merge duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge duplicates": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "pinData": {}
+}
