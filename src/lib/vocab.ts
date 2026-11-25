@@ -10,6 +10,12 @@ export interface Word {
   topic: string;
   level?: Level; // CEFR level, missing for a few junk words
   examples: { it: string; en: string }[];
+  gender?: 'm' | 'f' | 'm/f';
+  article?: string; // "la porta"
+  plural?: string; // "le porte"
+  forms?: { m_sg: string; f_sg: string; m_pl: string; f_pl: string }; // adjectives
+  verb?: { auxiliary: string; present: string; past: string; future: string }; // "io" forms
+  merged?: number[]; // old word ids merged into this one
 }
 
 export const LEVEL_NAMES = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
