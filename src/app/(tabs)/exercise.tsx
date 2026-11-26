@@ -48,7 +48,7 @@ export default function ExerciseMenu() {
 
 const useStyles = makeStyles((c) => ({
   grid: { flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingBottom: 24 },
-  tile: { backgroundColor: c.card, borderRadius: 24, borderWidth: 1, borderColor: c.border, padding: 16, gap: 12 },
-  title: { ...F.semibold, fontSize: 17, color: c.text },
-  badge: { ...F.semibold, fontSize: 12, color: c.accent.amber.text, backgroundColor: c.accent.amber.soft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start', overflow: 'hidden' },
+  tile: { backgroundColor: c.card, borderRadius: 24, borderWidth: 1, borderColor: c.border, padding: 16, gap: 12, alignItems: 'center', justifyContent: 'center' },
+  title: { ...F.semibold, fontSize: 17, color: c.text, textAlign: 'center' },
+  badge: { ...F.semibold, fontSize: 12, color: c.accent.amber.text, backgroundColor: c.accent.amber.soft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3, overflow: 'hidden' },
 }));

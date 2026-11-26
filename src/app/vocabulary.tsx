@@ -40,7 +40,7 @@ export default function Vocabulary() {
       <FlatList
         data={rows}
         keyExtractor={(r) => String(r.p.wordId)}
-        contentContainerStyle={{ padding: 16, gap: 8 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 0, gap: 8 }}
         ListEmptyComponent={<Text style={s.empty}>No words here yet.</Text>}
         renderItem={({ item: { p, w } }) => (
           <SwipeToDelete onDelete={() => removeWord(p.wordId)}>
@@ -63,7 +63,7 @@ export default function Vocabulary() {
 }
 
 const useStyles = makeStyles((c) => ({
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, paddingTop: 4 },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 },
   chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { ...F.semibold, fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.card, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: c.border },

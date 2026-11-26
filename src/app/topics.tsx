@@ -154,10 +154,10 @@ const TOPIC_ICON: Record<string, [Icon, Accent]> = {
 };
 
 const useStyles = makeStyles((c) => ({
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 46, paddingVertical: 8, marginHorizontal: 16, marginBottom: 2, paddingHorizontal: 14, backgroundColor: c.card, borderRadius: 14, borderWidth: 1, borderColor: c.border },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 46, paddingVertical: 8, marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 14, backgroundColor: c.card, borderRadius: 14, borderWidth: 1, borderColor: c.border },
   input: { ...F.regular, flex: 1, fontSize: 16, color: c.text, paddingVertical: 0 },
-  list: { padding: 16, paddingTop: 12, gap: 8 },
-  listTopics: { padding: 16, paddingTop: 12 },
+  list: { padding: 16, paddingTop: 0, gap: 8 },
+  listTopics: { padding: 16, paddingTop: 0 },
   label: { ...F.semibold, fontSize: 13, letterSpacing: 0.78, textTransform: 'uppercase', color: c.muted, marginHorizontal: 4, marginTop: 4, marginBottom: -4 },
   levels: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   level: { flexBasis: '30%', flexGrow: 1, minWidth: 0, backgroundColor: c.card, borderWidth: 1, borderColor: c.border, borderRadius: 18, paddingVertical: 12, paddingHorizontal: 10 },
