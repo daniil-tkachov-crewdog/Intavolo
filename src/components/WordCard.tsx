@@ -42,14 +42,55 @@ function highlight(sentence: string, word: string) {
   });
 }
 
+const GENDER = { m: 'masculine', f: 'feminine', 'm/f': 'masc./fem.' } as const;
+
+/** Labelled grammatical forms (noun sg/pl, verb tenses, adjective endings), if the word has any. */
+function formsOf(word: Word): { label: string; value: string }[] {
+  if (word.verb)
+    return [
+      { label: 'present', value: word.verb.present },
+      { label: 'past', value: word.verb.past },
+      { label: 'future', value: word.verb.future },
+    ];
+  if (word.forms)
+    return [
+      { label: 'masc. sing.', value: word.forms.m_sg },
+      { label: 'fem. sing.', value: word.forms.f_sg },
+      { label: 'masc. plural', value: word.forms.m_pl },
+      { label: 'fem. plural', value: word.forms.f_pl },
+    ];
+  return [
+    ...(word.article ? [{ label: 'singular', value: word.article }] : []),
+    ...(word.plural ? [{ label: 'plural', value: word.plural }] : []),
+  ];
+}
+
+function Forms({ word }: { word: Word }) {
+  const s = useStyles();
+  const forms = formsOf(word).filter((f) => !!f.value);
+  if (forms.length === 0) return null;
+  const width = forms.length === 3 ? '31.5%' : '48.5%';
+  return (
+    <View style={s.forms}>
+      {forms.map((f) => (
+        <View key={f.label} style={[s.form, { width }]}>
+          <Text style={s.formLabel}>{f.label}</Text>
+          <Text style={s.formValue}>{f.value}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function WordCard({ word }: { word: Word }) {
   const s = useStyles();
+  const pos = [word.pos, word.pos === 'noun' && word.gender ? GENDER[word.gender] : null].filter(Boolean).join(' · ');
   return (
     <View style={s.card}>
       {(!!word.topic || !!word.pos) && (
         <View style={s.tags}>
           {!!word.topic && <Text style={s.tag}>{word.topic}</Text>}
-          {!!word.pos && <Text style={s.pos}>{word.pos}</Text>}
+          {!!pos && <Text style={s.pos}>{pos}</Text>}
         </View>
       )}
       <View style={s.row}>
@@ -66,6 +107,7 @@ export function WordCard({ word }: { word: Word }) {
         {word.en}
       </Text>
       {word.alt.length > 0 && <Text style={s.alt}>also: {word.alt.join(', ')}</Text>}
+      <Forms word={word} />
 
       {word.examples.length > 0 && (
         <View style={s.examples}>
@@ -101,6 +143,10 @@ const useStyles = makeStyles((c) => ({
   divider: { height: 1, backgroundColor: c.border, marginTop: 20, marginBottom: 18 },
   en: { ...F.semibold, fontSize: 26, letterSpacing: -0.26, color: c.text },
   alt: { ...F.regular, fontSize: 15, color: c.muted, marginTop: 4 },
+  forms: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8, marginTop: 16 },
+  form: { backgroundColor: c.surface, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10 },
+  formLabel: { ...F.semibold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', color: c.muted },
+  formValue: { ...F.semibold, fontSize: 16, color: c.text, marginTop: 2 },
   examples: { marginTop: 20, gap: 8 },
   example: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.surface, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 14 },
   exIt: { ...F.regular, fontSize: 16, color: c.text },
