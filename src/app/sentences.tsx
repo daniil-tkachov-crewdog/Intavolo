@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../lib/store';
 import { useActivity } from '../lib/activity';
-import { LEVEL_COUNTS, SESSION, atLevel, fromMyWords, pickSession, type Sentence, type Source } from '../lib/sentences';
+import { LEVEL_COUNTS, SESSION, atLevel, fromMyWords, pickRanked, pickSession, type Sentence, type Source } from '../lib/sentences';
 import { tiles } from '../lib/translate';
 import { BelowHeader, KeyboardAvoid } from '../components/BelowHeader';
 import { Button } from '../components/Button';
@@ -22,7 +22,7 @@ export default function Sentences() {
   const [score, setScore] = useState<number | null>(null);
 
   const start = () => {
-    const items = pickSession(source === 'mine' ? mine : atLevel(source)).map((sentence) => {
+    const items = (source === 'mine' ? pickRanked(mine) : pickSession(atLevel(source))).map((sentence) => {
       // Word bank only when the shortest translation is short enough to tap together.
       const shortest = [...sentence.en].sort((a, b) => a.length - b.length)[0];
       const kind: Kind = tiles(shortest).length <= 10 && Math.random() < 0.5 ? 'tiles' : 'type';
@@ -49,7 +49,7 @@ function Setup({ source, setSource, mineCount, onStart }: { source: Source; setS
   const s = useStyles();
   const { c } = useTheme();
   const options: { key: Source; title: string; sub: string; count: number }[] = [
-    { key: 'mine', title: 'My words', sub: 'Only words you have added', count: mineCount },
+    { key: 'mine', title: 'My words', sub: 'Sentences using your words', count: mineCount },
     ...LEVEL_COUNTS.map((l) => ({ key: l.name as Source, title: l.name, sub: 'All sentences at this level', count: l.count })),
   ];
   const count = options.find((o) => o.key === source)?.count ?? 0;
