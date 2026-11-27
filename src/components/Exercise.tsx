@@ -6,7 +6,7 @@ import { checkAnswer } from '../lib/answer';
 import type { Outcome, Status } from '../lib/engine';
 import { WORDS, englishOf, type Word } from '../lib/vocab';
 import { Button } from './Button';
-import { SpeakButton } from './WordCard';
+import { SpeakButton, WordDetails } from './WordCard';
 import { F, makeStyles, useTheme, type Accent } from '../lib/theme';
 
 interface Props {
@@ -41,6 +41,7 @@ function MultipleChoice({ word, top, onAnswered }: Props) {
 
   return (
     <Layout
+      word={word}
       card={
         <>
           {top}
@@ -83,6 +84,7 @@ function TypeAnswer({ word, status, top, onAnswered }: Props) {
 
   return (
     <Layout
+      word={word}
       card={
         <>
           {top}
@@ -125,13 +127,22 @@ function TypeAnswer({ word, status, top, onAnswered }: Props) {
 }
 
 /** Card, result banner, and buttons pinned at the bottom. */
-function Layout({ card, done, outcome, footer }: { card: ReactNode; done: boolean; outcome: Outcome; footer: ReactNode }) {
+function Layout({ word, card, done, outcome, footer }: { word: Word; card: ReactNode; done: boolean; outcome: Outcome; footer: ReactNode }) {
   const s = useStyles();
   return (
     <View style={{ flex: 1 }}>
       <View style={{ gap: 14 }}>
         <View style={s.card}>{card}</View>
         {done && <Banner outcome={outcome} />}
+        {done && (
+          <View style={s.card}>
+            <View style={s.detailsHead}>
+              <Text style={s.detailsIt}>{word.it}</Text>
+              <SpeakButton text={word.it} size={20} />
+            </View>
+            <WordDetails word={word} head />
+          </View>
+        )}
       </View>
       <View style={s.footer}>{footer}</View>
     </View>
@@ -186,6 +197,8 @@ const useStyles = makeStyles((c) => ({
   answer: { ...F.medium, fontSize: 16, color: c.text, textAlign: 'center' },
   banner: { borderRadius: 20, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
   msg: { ...F.semibold, fontSize: 16, flex: 1 },
+  detailsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: -16 },
+  detailsIt: { ...F.bold, fontSize: 26, color: c.text, flexShrink: 1 },
   footer: { marginTop: 'auto', paddingTop: 12 },
   row: { flexDirection: 'row', gap: 8 },
 }));

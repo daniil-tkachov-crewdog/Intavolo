@@ -82,30 +82,22 @@ function Forms({ word }: { word: Word }) {
   );
 }
 
-export function WordCard({ word }: { word: Word }) {
+/**
+ * Full word data below the headword: alternatives, forms and examples.
+ * `head` also shows the English meaning plus pronunciation and part of speech.
+ */
+export function WordDetails({ word, head }: { word: Word; head?: boolean }) {
   const s = useStyles();
   const pos = [word.pos, word.pos === 'noun' && word.gender ? GENDER[word.gender] : null].filter(Boolean).join(' · ');
+  const meta = [word.ipa, pos].filter(Boolean).join('  ·  ');
   return (
-    <View style={s.card}>
-      {(!!word.topic || !!word.pos) && (
-        <View style={s.tags}>
-          {!!word.topic && <Text style={s.tag}>{word.topic}</Text>}
-          {!!pos && <Text style={s.pos}>{pos}</Text>}
-        </View>
+    <View>
+      {head && (
+        <>
+          <Text style={s.enSmall}>{word.en}</Text>
+          {!!meta && <Text style={s.meta}>{meta}</Text>}
+        </>
       )}
-      <View style={s.row}>
-        <View style={{ flexShrink: 1 }}>
-          <Text style={s.it} maxFontSizeMultiplier={SCALE.display}>
-            {word.it}
-          </Text>
-          {!!word.ipa && <Text style={s.ipa}>{word.ipa}</Text>}
-        </View>
-        <SpeakButton text={word.it} size={26} look="solid" />
-      </View>
-      <View style={s.divider} />
-      <Text style={s.en} maxFontSizeMultiplier={SCALE.title}>
-        {word.en}
-      </Text>
       {word.alt.length > 0 && <Text style={s.alt}>also: {word.alt.join(', ')}</Text>}
       <Forms word={word} />
 
@@ -132,6 +124,35 @@ export function WordCard({ word }: { word: Word }) {
   );
 }
 
+export function WordCard({ word }: { word: Word }) {
+  const s = useStyles();
+  const pos = [word.pos, word.pos === 'noun' && word.gender ? GENDER[word.gender] : null].filter(Boolean).join(' · ');
+  return (
+    <View style={s.card}>
+      {(!!word.topic || !!word.pos) && (
+        <View style={s.tags}>
+          {!!word.topic && <Text style={s.tag}>{word.topic}</Text>}
+          {!!pos && <Text style={s.pos}>{pos}</Text>}
+        </View>
+      )}
+      <View style={s.row}>
+        <View style={{ flexShrink: 1 }}>
+          <Text style={s.it} maxFontSizeMultiplier={SCALE.display}>
+            {word.it}
+          </Text>
+          {!!word.ipa && <Text style={s.ipa}>{word.ipa}</Text>}
+        </View>
+        <SpeakButton text={word.it} size={26} look="solid" />
+      </View>
+      <View style={s.divider} />
+      <Text style={s.en} maxFontSizeMultiplier={SCALE.title}>
+        {word.en}
+      </Text>
+      <WordDetails word={word} />
+    </View>
+  );
+}
+
 const useStyles = makeStyles((c) => ({
   card: { backgroundColor: c.card, borderRadius: 28, paddingHorizontal: 22, paddingTop: 22, paddingBottom: 18, borderWidth: 1, borderColor: c.border },
   tags: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 22 },
@@ -142,6 +163,8 @@ const useStyles = makeStyles((c) => ({
   ipa: { ...F.regular, fontSize: 17, color: c.muted, marginTop: 4 },
   divider: { height: 1, backgroundColor: c.border, marginTop: 20, marginBottom: 18 },
   en: { ...F.semibold, fontSize: 26, letterSpacing: -0.26, color: c.text },
+  enSmall: { ...F.semibold, fontSize: 20, color: c.text },
+  meta: { ...F.regular, fontSize: 14, color: c.muted, marginTop: 2 },
   alt: { ...F.regular, fontSize: 15, color: c.muted, marginTop: 4 },
   forms: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8, marginTop: 16 },
   form: { backgroundColor: c.surface, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10 },

@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, LayoutAnimation, Pressable, View } from 'react-native';
 import { Text } from '../components/Text';
 import { useStore } from '../lib/store';
 import { WORD_BY_ID, englishOf } from '../lib/vocab';
 import { GOALS, STATUSES, STATUS_LABEL, type Status } from '../lib/engine';
 import { BelowHeader } from '../components/BelowHeader';
-import { SpeakButton } from '../components/WordCard';
+import { SpeakButton, WordDetails } from '../components/WordCard';
 import { SwipeToDelete } from '../components/SwipeToDelete';
 import { F, makeStyles, useTheme } from '../lib/theme';
 
@@ -14,6 +14,11 @@ export default function Vocabulary() {
   const { c } = useTheme();
   const { progress, removeWord } = useStore();
   const [filter, setFilter] = useState<Status | 'all'>('all');
+  const [open, setOpen] = useState<number | null>(null);
+  const toggle = (id: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((o) => (o === id ? null : id));
+  };
 
   const rows = useMemo(
     () =>
@@ -44,10 +49,12 @@ export default function Vocabulary() {
         ListEmptyComponent={<Text style={s.empty}>No words here yet.</Text>}
         renderItem={({ item: { p, w } }) => (
           <SwipeToDelete onDelete={() => removeWord(p.wordId)}>
+            <Pressable onPress={() => toggle(p.wordId)} style={s.card}>
             <View style={s.row}>
               <View style={{ flex: 1 }}>
                 <Text style={s.it}>{w.it}</Text>
                 <Text style={s.en}>{englishOf(w).join(', ')}</Text>
+                {open === p.wordId && !!w.ipa && <Text style={s.en}>{w.ipa}{w.pos ? `  ·  ${w.pos}` : ''}</Text>}
               </View>
               <Text style={[s.status, { color: c.status[p.status].text, backgroundColor: c.status[p.status].soft }]}>
                 {STATUS_LABEL[p.status]}
@@ -55,6 +62,12 @@ export default function Vocabulary() {
               </Text>
               <SpeakButton text={w.it} size={18} />
             </View>
+            {open === p.wordId && (
+              <View style={s.details}>
+                <WordDetails word={w} />
+              </View>
+            )}
+            </Pressable>
           </SwipeToDelete>
         )}
       />
@@ -66,7 +79,9 @@ const useStyles = makeStyles((c) => ({
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 },
   chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { ...F.semibold, fontSize: 13 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.card, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: c.border },
+  card: { backgroundColor: c.card, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: c.border },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  details: { borderTopWidth: 1, borderTopColor: c.border, marginTop: 12, paddingTop: 4 },
   it: { ...F.semibold, fontSize: 17, color: c.text },
   en: { ...F.regular, fontSize: 14, color: c.muted, marginTop: 2 },
   status: { ...F.semibold, fontSize: 12, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },

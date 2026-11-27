@@ -9,7 +9,7 @@ import { WORDS, WORD_BY_ID, englishOf, type Word } from '../lib/vocab';
 import { checkAnswer } from '../lib/answer';
 import { BelowHeader, KeyboardAvoid } from '../components/BelowHeader';
 import { Button } from '../components/Button';
-import { SpeakButton } from '../components/WordCard';
+import { SpeakButton, WordDetails } from '../components/WordCard';
 import { F, makeStyles, useTheme } from '../lib/theme';
 
 const BATCH = 6;
@@ -121,7 +121,6 @@ function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
   const { c } = useTheme();
   const [i, setI] = useState(0);
   const w = words[i];
-  const ex = w.examples[0];
   return (
     <View style={s.card}>
       <Text style={s.counter}>
@@ -132,15 +131,9 @@ function Meet({ words, onDone }: { words: Word[]; onDone: () => void }) {
         {englishOf(w).join(', ')}
       </Text>
       {!!w.pos && <Text style={s.pos}>{w.pos}</Text>}
-      {ex && (
-        <View style={s.example}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[s.exIt, { flex: 1 }]}>{ex.it}</Text>
-            <SpeakButton text={ex.it} size={18} />
-          </View>
-          <Text style={s.exEn}>{ex.en}</Text>
-        </View>
-      )}
+      <View style={{ marginTop: 4 }}>
+        <WordDetails word={w} />
+      </View>
       <View style={s.row}>
         {i > 0 && <Button label="Back" variant="secondary" onPress={() => setI(i - 1)} />}
         <Button label={i + 1 < words.length ? 'Got it' : 'Start practice'} onPress={() => (i + 1 < words.length ? setI(i + 1) : onDone())} />
@@ -335,9 +328,6 @@ const useStyles = makeStyles((c) => ({
   sub: { ...F.regular, fontSize: 17, color: c.muted, marginTop: 4 },
   en: { ...F.semibold, fontSize: 26, letterSpacing: -0.26, color: c.accent.purple.text, textAlign: 'center', marginTop: 18 },
   pos: { ...F.regular, fontSize: 13, color: c.muted, fontStyle: 'italic', textAlign: 'center', marginTop: 4 },
-  example: { backgroundColor: c.surface, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 14, marginTop: 18, gap: 2 },
-  exIt: { ...F.regular, fontSize: 16, color: c.text },
-  exEn: { ...F.regular, fontSize: 14, color: c.muted },
   option: { minHeight: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 44, paddingVertical: 12 },
   optionText: { ...F.regular, fontSize: 17, color: c.text, textAlign: 'center' },
   optionOn: { ...F.semibold, color: '#FFFFFF' },
